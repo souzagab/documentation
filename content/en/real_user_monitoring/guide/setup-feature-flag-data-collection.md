@@ -97,6 +97,12 @@ Feature flag tracking is available for your Flutter applications. To start, set 
 
 [1]: https://docs.datadoghq.com/real_user_monitoring/flutter/
 {{% /tab %}}
+{{% tab "React Native" %}}
+
+Feature flag tracking is available for your React Native applications. To start, set up [RUM React Native monitoring][1]. You need the React Native RUM SDK version >= 1.7.0.
+
+[1]: https://docs.datadoghq.com/real_user_monitoring/reactnative/
+{{% /tab %}}
 {{< /tabs >}}
 
 ## Integrations
@@ -125,7 +131,7 @@ datadogRum.addFeatureFlagEvaluation(key, value);
 
 Each time a feature flag is evaluated, add the following function to send the feature flag information to RUM:
 
-   ```javascript
+   ```swift
    Global.rum.addFeatureFlagEvaluation(key, value);
    ```
 
@@ -134,8 +140,17 @@ Each time a feature flag is evaluated, add the following function to send the fe
 
 Each time a feature flag is evaluated, add the following function to send the feature flag information to RUM:
 
-   ```javascript
+   ```kotlin
    GlobalRum.get().addFeatureFlagEvaluation(key, value);
+   ```
+
+{{% /tab %}}
+{{% tab "React Native" %}}
+
+Each time a feature flag is evaluated, add the following function to send the feature flag information to RUM:
+
+   ```javascript
+   DdRum.addFeatureFlagEvaluation(key, value);
    ```
 
 {{% /tab %}}
@@ -174,6 +189,12 @@ LaunchDarkly does not currently support this integration. Create a ticket with L
 
 {{% /tab %}}
 {{% tab "Android" %}}
+
+LaunchDarkly does not currently support this integration. Create a ticket with LaunchDarkly to request this feature.
+
+
+{{% /tab %}}
+{{% tab "React Native" %}}
 
 LaunchDarkly does not currently support this integration. Create a ticket with LaunchDarkly to request this feature.
 
@@ -263,6 +284,35 @@ For more information about initializing Split's SDK, see Split's [Android SDK do
 
 [1]: https://help.split.io/hc/en-us/articles/360020343291-Android-SDK
 {{% /tab %}}
+{{% tab "React Native" %}}
+
+Initialize Split's SDK and and create an impression listener reporting feature flag evaluations to Datadog using the following snippet of code:
+
+For more information about initializing Split's SDK, see Split's [React Native SDK documentation][1].
+
+```javascript
+const factory = SplitFactory({
+    core: {
+      authorizationKey: "<APP_KEY>",
+      key: "<USER_ID>",
+    },
+    impressionListener: {
+      logImpression(impressionData) {
+          DdRum
+              .addFeatureFlagEvaluation(
+                  impressionData.impression.feature,
+                  impressionData.impression.treatment
+              );
+    },
+  },
+});
+
+const client = factory.client();
+```
+
+
+[1]: https://help.split.io/hc/en-us/articles/4406066357901-React-Native-SDK#2-instantiate-the-sdk-and-create-a-new-split-client
+{{% /tab %}}
 {{< /tabs >}}
 
 
@@ -296,6 +346,11 @@ Flagsmith does not currently support this integration. Create a ticket with Flag
 
 {{% /tab %}}
 {{% tab "Android" %}}
+
+Flagsmith does not currently support this integration. Create a ticket with Flagsmith to request this feature.
+
+{{% /tab %}}
+{{% tab "React Native" %}}
 
 Flagsmith does not currently support this integration. Create a ticket with Flagsmith to request this feature.
 
