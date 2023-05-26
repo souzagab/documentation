@@ -1,0 +1,27 @@
+{
+  "data": {
+    "attributes": {
+      "display_timezone": "America/New_York",
+      "message": "dark forest",
+      "monitor_identifier": {
+        "monitor_tags": [
+          "cat:hat"
+        ]
+      },
+      "mute_first_recovery_notification": false,
+      "notify_end_states": [
+        "alert",
+        "warn"
+      ],
+      "notify_end_types": [
+        "canceled",
+        "expired"
+      ],
+      "schedule": {
+        "start": "3020-01-02T03:04:05+0000"
+      },
+      "scope": "test:exampledowntime"
+    },
+    "type": "downtime"
+  }
+}
