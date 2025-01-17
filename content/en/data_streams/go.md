@@ -1,113 +1,126 @@
 ---
 title: Setup Data Streams Monitoring for Go
-kind: documentation
 ---
 
-{{< site-region region="ap1" >}}
-<div class="alert alert-info">Data Streams Monitoring is not supported in the AP1 region.</a></div>
-{{< /site-region >}}
+The following instrumentation types are available:
+* [Automatic instrumentation for Kafka-based workloads](#automatic-instrumentation)
+* [Manual Instrumentation for Kafka-based workloads](#kafka-based-workloads)
+* [Manual instrumentation for other queuing technology or protocol](#other-queuing-technologies-or-protocols)
 
 ### Prerequisites
 
 To start with Data Streams Monitoring, you need recent versions of the Datadog Agent and Data Streams Monitoring libraries:
+
 * [Datadog Agent v7.34.0 or later][1]
-* [Data Streams Library v0.2 or later][2]
+* [dd-trace-go v1.56.1 or later][2]
+
+### Supported libraries
+
+| Technology | Library                                                                  | Minimal tracer version | Recommended tracer version |
+|------------|--------------------------------------------------------------------------|------------------------|----------------------------|
+| Kafka      | [confluent-kafka-go][8]                                                  | 1.56.1                | 1.66.0 or later            |
+| Kafka      | [Sarama][9]                                                             | 1.56.1                 | 1.66.0 or later            |
 
 ### Installation
 
-Initiate a Data Streams pathway with `datastreams.Start()` at the start of your pipeline.
+#### Automatic Instrumentation
 
-Two types of instrumentation are available:
-- Instrumentation for Kafka-based workloads
-- Custom instrumentation for any other queuing technology or protocol
+Automatic instrumentation uses [Orchestrion][4] to install dd-trace-go and supports both the Sarama and Confluent Kafka libraries.
 
-<div class="alert alert-info">The default Trace Agent URL is <code>localhost:8126</code>. If this is different for your application, use the <code>datastreams.Start(datastreams.WithAgentAddr("notlocalhost:8126"))</code> option.</div>
+To automatically instrument your service:
 
-### Kafka instrumentation
+1. Follow the [Orchestrion Getting Started][5] guide to compile or run your service using [Orchestrion][4].
+2. Set the `DD_DATA_STREAMS_ENABLED=true` environment variable
 
-1. Configure producers to call `TraceKafkaProduce()` before sending out a Kafka message:
+#### Manual instrumentation
 
-   ```go
-   import (ddkafka "github.com/DataDog/data-streams-go/integrations/kafka")
-   ...
-   ctx = ddkafka.TraceKafkaProduce(ctx, &kafkaMsg)
-   ```
+##### Sarama Kafka client
 
-   This function adds a new checkpoint onto any existing pathway in the provided Go context, or creates a new pathway if none are found. It then adds the pathway into your Kafka message headers.
+To manually instrument the Sarama Kafka client with Data Streams Monitoring:
 
-2. Configure consumers to call `TraceKafkaConsume()`:
-
-   ```go
-   import ddkafka "github.com/DataDog/data-streams-go/integrations/kafka"
-   ...
-   ctx = ddkafka.TraceKafkaConsume(ctx, &kafkaMsg, consumer_group)
-   ```
-
-   This function extracts the pathway that a Kafka message has gone through so far. It sets a new checkpoint on the pathway to record the successful consumption of a message and stores the pathway into the provided Go context.
-
-   **Note**: The output `ctx` from `TraceKafkaProduce()` and the output `ctx` from `TraceKafkaConsume()` both contain information about the updated pathway.
-
-For `TraceKafkaProduce()`, if you are sending multiple Kafka messages at once (fan-out), do not reuse the output `ctx` across calls.
-
-For `TraceKafkaConsume()`, if you are aggregating multiple messages to create a smaller number of payloads (fan-in), call `MergeContext()` to merge the contexts into one context that can be passed into the next `TraceKafkaProduce()` call:
+1. Import the `ddsarama` go library
 
 ```go
 import (
-    datastreams "github.com/DataDog/data-streams-go"
-    ddkafka "github.com/DataDog/data-streams-go/integrations/kafka"
+  ddsarama "gopkg.in/DataDog/dd-trace-go.v1/contrib/Shopify/sarama" // 1.x
+  // ddsarama "github.com/DataDog/dd-trace-go/contrib/Shopify/sarama/v2" // 2.x
 )
 
-...
-
-contexts := []Context{}
-for (...) {
-    contexts.append(contexts, ddkafka.TraceKafkaConsume(ctx, &consumedMsg, consumer_group))
-}
-mergedContext = datastreams.MergeContexts(contexts...)
+2. Wrap the producer with `ddsarama.WrapAsyncProducer`
 
 ...
+config := sarama.NewConfig()
+producer, err := sarama.NewAsyncProducer([]string{bootStrapServers}, config)
 
-ddkafka.TraceKafkaProduce(mergedContext, &producedMsg)
+// ADD THIS LINE
+producer = ddsarama.WrapAsyncProducer(config, producer, ddsarama.WithDataStreams())
 ```
 
-### Manual instrumentation
+##### Confluent Kafka client
 
-You can also use manual instrumentation. For example, in HTTP, you can propagate the pathway with HTTP headers.
+To manually instrument Confluent Kafka with Data Streams Monitoring:
 
-To inject a pathway:
+1. Import the `ddkafka` go library
 
 ```go
-req, err := http.NewRequest(...)
-...
-p, ok := datastreams.PathwayFromContext(ctx)
+import (
+  ddkafka "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka.v2" // 1.x
+  // ddkafka "github.com/DataDog/dd-trace-go/contrib/confluentinc/confluent-kafka-go/kafka.v2/v2" // 2.x
+)
+```
+
+2. Wrap the producer creation with `ddkafka.NewProducer` and use the `ddkafka.WithDataStreams()` configuration
+
+```go
+// CREATE PRODUCER WITH THIS WRAPPER
+producer, err := ddkafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": bootStrapServers,
+}, ddkafka.WithDataStreams())
+```
+
+If a service consumes data from one point and produces to another point, propagate context between the two places using the Go context structure:
+
+3. Extract the context from headers
+  ```go
+  ctx = datastreams.ExtractFromBase64Carrier(ctx, ddsarama.NewConsumerMessageCarrier(message))
+  ```
+
+4. Inject it into the header before producing downstream
+    ```go
+    datastreams.InjectToBase64Carrier(ctx, ddsarama.NewProducerMessageCarrier(message))
+    ```
+
+#### Other queuing technologies or protocols
+
+You can also use manual instrumentation. For example, you can propagate context through Kinesis.
+
+##### Instrumenting the produce call
+
+1. Ensure your message supports the [TextMapWriter interface][6].
+2. Inject the context into your message and instrument the produce call by calling:
+
+```go
+ctx, ok := tracer.SetDataStreamsCheckpointWithParams(ctx, options.CheckpointParams{PayloadSize: getProducerMsgSize(msg)}, "direction:out", "type:kinesis", "topic:kinesis_arn")
 if ok {
-   req.Headers.Set(datastreams.PropagationKeyBase64, p.EncodeStr())
+  datastreams.InjectToBase64Carrier(ctx, message)
 }
+
 ```
 
-To extract a pathway:
+##### Instrumenting the consume call
+
+1. Ensure your message supports the [TextMapReader interface][7].
+2. Extract the context from your message and instrument the consume call by calling:
 
 ```go
-func extractPathwayToContext(req *http.Request) context.Context {
-	ctx := req.Context()
-	p, err := datastreams.DecodeStr(req.Header.Get(datastreams.PropagationKeyBase64))
-	if err != nil {
-		return ctx
-	}
-	ctx = datastreams.ContextWithPathway(ctx, p)
-	_, ctx = datastreams.SetCheckpoint(ctx, "type:http")
-}
+	ctx, ok := tracer.SetDataStreamsCheckpointWithParams(datastreams.ExtractFromBase64Carrier(context.Background(), message), options.CheckpointParams{PayloadSize: payloadSize}, "direction:in", "type:kinesis", "topic:kinesis_arn")
 ```
-
-### Add a dimension
-
-You can add an additional dimension to end-to-end latency metrics with the `event_type` tag:
-
-```go
-_, ctx = datastreams.SetCheckpoint(ctx, "type:internal", "event_type:sell")
-```
-
-You only need to add the `event_type` tag for the first service in each pathway. High-cardinality data (such as request IDs or hosts) are not supported as values for the `event_type` tag.
-
-[1]: /agent
-[2]: https://github.com/DataDog/data-streams-go
+[1]: /agent/
+[2]: https://github.com/DataDog/dd-trace-go
+[3]: https://docs.datadoghq.com/tracing/trace_collection/library_config/go/
+[4]: https://datadoghq.dev/orchestrion/
+[5]: https://datadoghq.dev/orchestrion/docs/getting-started/
+[6]: https://github.com/DataDog/dd-trace-go/blob/main/datastreams/propagation.go#L37
+[7]: https://github.com/DataDog/dd-trace-go/blob/main/datastreams/propagation.go#L44
+[8]: https://github.com/confluentinc/confluent-kafka-go
+[9]: https://github.com/Shopify/sarama

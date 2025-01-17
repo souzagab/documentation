@@ -2,106 +2,123 @@
 aliases:
 - /ja/agent/faq/how-do-i-change-the-frequency-of-an-agent-check/
 - /ja/agent/faq/agent-5-custom-agent-check/
+- /ja/developers/write_agent_check/
 further_reading:
 - link: /developers/
   tag: ドキュメント
   text: Datadog での開発
-kind: documentation
 title: カスタム Agent チェックの書き方
 ---
 
 ## 概要
 
-このページでは、`min_collection_interval` を使用してサンプルのカスタム Agent チェックを作成し、サンプルのカスタムチェックを拡張するためのユースケースの例を示します。カスタムチェックは、Agent ベースのインテグレーションと同じ固定間隔で実行されます。デフォルトでは 15 秒ごとです。
+このページでは、基本的な「Hello world!」カスタム Agent チェックを構築する手順を説明します。また、チェックの最小収集間隔を変更する方法も示します。
 
 ## セットアップ
 
 ### インストール
 
-カスタム Agent チェックを作成するには、まず [Datadog Agent][1] をインストールします。
+カスタム Agent チェックを作成する前に、[Datadog Agent][1] をインストールしてください。
 
-**注**: Agent v7+ を実行している場合、Agent チェックは Python 3 と互換性がある必要があります。それ以外の場合は Python 2.7+ との互換性が必要です。
+<div class="alert alert-warning">最新バージョンの Agent と互換性を保つには、カスタム Agent チェックは Python 3 互換である必要があります。</div>
 
-### コンフィギュレーション
+### 構成
 
-1. システムの `conf.d` ディレクトリに移動します。`conf.d` ディレクトリの場所の詳細については、オペレーティングシステムの [Agent コンフィギュレーション設定][2]を参照してください。
+1. システムの `conf.d` ディレクトリに移動します。`conf.d` ディレクトリの場所の詳細については、[Agent コンフィギュレーションファイル][2]を参照してください。
 2. `conf.d` ディレクトリに、新しい Agent チェック用の新しいコンフィギュレーションファイルを作成します。ファイルに `custom_checkvalue.yaml` という名前を付けます。
 3. ファイルを編集して、以下を含めます。
-  ```yaml
-    init_config:
+   {{< code-block lang="yaml" filename="conf.d/custom_checkvalue.yaml" >}}
+init_config:
+instances:
+  [{}]
+{{< /code-block >}}
+4. `checks.d` ディレクトリにチェックファイルを作成します。ファイルに `custom_checkvalue.py` という名前を付けます。
 
-    instances:
-      [{}]
-  ```
-4. `checks.d` ディレクトリに新しいチェックファイルを作成します。ファイルに `custom_checkvalue.py` という名前を付けます。
+   <div class="alert alert-info">
+     <strong>Naming your checks:</strong>
+     <ul>
+       <li>It's a good idea to prefix your check with <code>custom_</code> to avoid conflicts with the name of a pre-existing Datadog Agent integration. For example, if you have a custom Postfix check, name your check files <code>custom_postfix.py</code> and <code>custom_postfix.yaml</code> instead of <code>postfix.py</code> and <code>postfix.yaml</code>.</li>
+       <li>The names of the configuration and check files must match. If your check is called <code>custom_checkvalue.py</code>, your configuration file <i>must</i> be named <code>custom_checkvalue.yaml</code>.</li>
+     </ul>
+   </div>
 5. ファイルを編集して、以下を含めます。
-  ```python
-    from checks import AgentCheck
-    class HelloCheck(AgentCheck):
-      def check(self, instance):
-        self.gauge('hello.world', 1)
-  ```
-6. [Agent を再起動します][3]。1 分以内に、[メトリクスサマリー][4]に `hello.world` という新しいメトリクスが表示されます。
+   {{< code-block lang="python" filename="checks.d/custom_checkvalue.py" >}}
+from checks import AgentCheck
+class HelloCheck(AgentCheck):
+  def check(self, instance):
+    self.gauge('hello.world', 1)
+{{< /code-block >}}
+6. [Agent を再起動][3]し、新たに `hello.world` という名前のメトリクスが [Metric Summary][4] に表示されるまで待ちます。
 
-**注**: コンフィギュレーションファイルとチェックファイルの名前は一致している必要があります。チェックの名前が `custom_checkvalue.py` の場合、コンフィギュレーションファイルの名前は `custom_checkvalue.yaml` である必要があります。
-
-### 結果
-
-1 分以内に、[メトリクスサマリー][4]に `hello.world` という新しいメトリクスが表示されます。これは `1` の値を送信します。
-
-**注**: カスタムチェックの名前を選択する際は、既存の Datadog Agent インテグレーションの名前との競合を避けるため、名前の前に `custom_` を付けてください。たとえば、カスタム Postfix チェックの場合、チェックファイルの名前は、`postfix.py` と `postfix.yaml` ではなく、`custom_postfix.py` と `custom_postfix.yaml` にします。
+カスタムチェックの動作に問題がある場合は、ファイルの権限を確認してください。チェックファイルは Agent ユーザーが読み取り、実行できる必要があります。その他のトラブルシューティング手順については、[Agent チェックのトラブルシューティング][7]を参照してください。
 
 ### 収集間隔の更新
 
-チェックの収集間隔を変更するには、`custom_checkvalue.yaml` ファイルで `min_collection_interval` を使用します。デフォルト値は `15` です。Agent v6 の場合、`min_collection_interval` をインスタンスレベルで追加し、インスタンスごとに個別に構成する必要があります。例:
+新しいチェックの収集間隔を変更するには、`custom_checkvalue.yaml` ファイル内で `min_collection_interval` 設定を使用し、秒単位で指定します。デフォルト値は 15 秒です。`min_collection_interval` はインスタンスレベルで追加する必要があります。カスタムチェックが複数のインスタンスを監視するように設定されている場合、インスタンスごとに間隔を個別に構成する必要があります。
 
-```yaml
+`min_collection_interval` を `30` に設定しても、必ずしもメトリクスが 30 秒ごとに収集されることは保証されません。Agent のコレクタは 30 秒ごとにチェックを実行しようとしますが、同一の Agent 上で有効なインテグレーションおよびチェックの数によっては、チェックが他のインテグレーションやチェックの後ろでキューに入る可能性があります。もし `check` メソッドが完了するのに 30 秒以上かかる場合、Agent はまだチェックが実行中であることを検知し、次の間隔までその実行をスキップします。
+
+#### 収集間隔を設定
+
+単一のインスタンスの場合、収集間隔を 30 秒に設定するには以下の構成を使用します。
+
+{{< code-block lang="yaml" filename="conf.d/custom_checkvalue.yaml" >}}
 init_config:
 
 instances:
   - min_collection_interval: 30
-```
+{{< /code-block >}}
 
-**注**: `min_collection_interval` を `30` に設定しても、メトリクスが 30 秒ごとに収集されるというわけではなく、最短 30 秒ごとに収集されるという意味になります。コレクターはチェックを 30 秒ごとに実行しようとしますが、同じ Agent で有効にされているインテグレーションとチェックの数によっては、待機しなけらばならない場合があります。さらに、`check` メソッドが終了までに 30 秒以上かかった場合も、Agent はチェックがまだ実行中であると認識し、次の間隔まで実行をスキップします。
+以下の例は、`my_service` という名前のサービスを 2 つの異なるサーバーで監視する想定のカスタムチェックで、間隔を変更する方法を示しています。
+
+{{< code-block lang="yaml" >}}
+init_config:
+
+instances:
+  - host: "http://localhost/"
+    service: my_service
+    min_collection_interval: 30
+
+  - host: "http://my_server/"
+    service: my_service
+    min_collection_interval: 30
+{{< /code-block >}}
 
 ### チェックの検証
 
 チェックが実行されていることを確認するには、次のコマンドを使用します。
 
-```shell
+{{< code-block lang="shell" >}}
 sudo -u dd-agent -- datadog-agent check <CHECK_NAME>
-```
+{{< /code-block >}}
 
-チェックが実行されていることを確認したら、[Agent を再起動][3]してチェックを含め、Datadog へのデータのレポートを開始します。
+チェックが動作していることを確認した後、[Agent を再起動][3]してチェックを含め、データの報告を開始してください。
 
 ## コマンドラインプログラムを実行するチェックの書き方
 
 コマンドラインプログラムを実行し、その出力をカスタムメトリクスとしてキャプチャするカスタムチェックを作成することができます。たとえば、チェックで `vgs` コマンドを実行して、ボリュームグループに関する情報を報告できます。
 
-チェック内でサブプロセスを実行するには、モジュール `datadog_checks.base.utils.subprocess_output` にある [`get_subprocess_output()` 関数][5]を使用します。`get_subprocess_output()` には、コマンドと引数を文字列としてリスト形式で渡します。
-
-### 例
+Python インタプリタはマルチスレッドの Go ランタイムに埋め込まれているため、Python 標準ライブラリの `subprocess` や `multithreading` モジュールの使用はサポートされていません。サブプロセス内でコマンドを実行する場合は、`datadog_checks.base.utils.subprocess_output` モジュールの [`get_subprocess_output()` 関数][5]を使用してください。コマンドおよびその引数は、コマンドや引数を文字列としてリスト内に渡します。
 
 たとえば、次のようにコマンドプロンプトで入力されるコマンド:
 
-  ```text
-  $ vgs -o vg_free
-  ```
-次のように `get_subprocess_output()` に渡します。
-  ```python
-  out, err, retcode = get_subprocess_output(["vgs", "-o", "vg_free"], self.log, raise_on_empty_output=True)
-  ```
- **注**: チェックを実行する Python インタープリターは、マルチスレッド Go ランタイムに埋め込まれるため、Python 標準ライブラリにある `subprocess` または `multithreading` モジュールの使用は、Agent バージョン 6 以降ではサポートされていません。
+{{< code-block lang="shell" >}}
+vgs -o vg_free
+{{< /code-block >}}
 
-### 結果
+次のように `get_subprocess_output()` に渡します。
+
+{{< code-block lang="python" >}}
+out, err, retcode = get_subprocess_output(["vgs", "-o", "vg_free"], self.log, raise_on_empty_output=True)
+{{< /code-block >}}
 
 コマンドラインプログラムを実行すると、チェックはターミナルのコマンドラインで実行されているのと同じ出力をキャプチャします。出力で文字列処理を実行し、結果で `int()` または `float()` を呼び出して、数値型を返します。
 
-サブプロセスの出力に対して文字列処理を行わず整数や浮動小数点数が返されない場合、チェックはエラーなく動作しているように見えても何もデータを報告しません。
+もしサブプロセスの出力に対して文字列処理を行わなかったり、整数または浮動小数点数に変換しなかった場合、チェックはエラーを出さずに実行されますが、メトリクスやイベントを報告しません。また、Agent ユーザーがコマンドが参照するファイルやディレクトリへの正しい権限を持っていない場合、または `get_subprocess_output()` に渡すコマンドを実行するための適切な権限を持っていない場合も、メトリクスやイベントは報告されません。
 
 以下に、コマンドラインプログラムの結果を返すチェックの例を示します。
 
-```python
+{{< code-block lang="python" >}}
 # ...
 from datadog_checks.base.utils.subprocess_output import get_subprocess_output
 
@@ -110,64 +127,68 @@ class LSCheck(AgentCheck):
         files, err, retcode = get_subprocess_output(["ls", "."], self.log, raise_on_empty_output=True)
         file_count = len(files.split('\n')) - 1  #len() はデフォルトで int 値を返します
         self.gauge("file.count", file_count,tags=['TAG_KEY:TAG_VALUE'] + self.instance.get('tags', []))
-```
-## ユースケース - ロードバランサーからデータを送信する
+{{< /code-block >}}
 
-カスタム Agent チェックを作成するための一般的な使用例は、ロードバランサーから Datadog メトリクスを送信したい場合です。まず、[コンフィギュレーション](#configuration)の手順に従います。次に、次の手順に従ってファイルを展開し、ロードバランサーからデータを送信します。
+## ロードバランサーからのデータ送信
+
+カスタム Agent チェックを書く一般的なユースケースは、ロードバランサーから Datadog メトリクスを送信することです。始める前に、[構成](#configuration)のステップに従います。
+
+ロードバランサーからデータを送信するためのファイルを展開するには
 
 1. `custom_checkvalue.py` のコードを次のように置き換えます (`lburl` の値をロードバランサーのアドレスに置き換えます)。
-  ```python
-    import urllib2
-    import simplejson
-    from checks import AgentCheck
+   {{< code-block lang="python" filename="checks.d/custom_checkvalue.py" >}}
+import urllib2
+import simplejson
+from checks import AgentCheck
 
-    class CheckValue(AgentCheck):
-      def check(self, instance):
+class CheckValue(AgentCheck):
+  def check(self, instance):
+    lburl = instance['ipaddress']
+    response = urllib2.urlopen("http://" + lburl + "/rest")
+    data = simplejson.load(response)
 
-        lburl = instance['ipaddress']
+    self.gauge('coreapp.update.value', data["value"])
+{{< /code-block >}}
 
-        response = urllib2.urlopen("http://" + lburl + "/rest")
-        data = simplejson.load(response)
+1. `custom_checkvalue.yaml` ファイルを更新します (`ipaddress` をロードバランサーの IP アドレスに置き換えます)。
+   {{< code-block lang="yaml" filename="conf.d/custom_checkvalue.yaml" >}}
+init_config:
 
-        self.gauge('coreapp.update.value', data["value"])
-  ```
-2. `custom_checkvalue.yaml` ファイルを更新します (`ipaddress` をロードバランサーの IP アドレスに置き換えます)。
-  ```yaml
-    init_config:
+instances:
+  - ipaddress: 1.2.3.4
+{{< /code-block >}}
 
-    instances:
-      - ipaddress: 1.2.3.4
-  ```
-3. [Agent を再起動します][3]。1 分以内に、ロードバランサーからメトリクスを送信する `coreapp.update.value` という新しいメトリクスが[メトリクスサマリー][4]に表示されます。
-4. このメトリクスの[ダッシュボードを作成][6]します。
+1. [Agent を再起動します][3]。1 分以内に、ロードバランサーからメトリクスを送信する `coreapp.update.value` という新しいメトリクスが[メトリクスサマリー][4]に表示されます。
+1. このメトリクスの[ダッシュボードを作成][6]します。
 
 ## Agent のバージョン管理
 
 次の try/except ブロックを使うと、カスタムチェックがどの Agent バージョンとも互換性を持つようになります。
 
-```python
+{{< code-block lang="python" >}}
 try:
-    # まず、新しいバージョンの Agent から基本クラスをインポートしてみます
+    # 最初に、古いバージョンの Agent から基本クラスのインポートを試みます
     from datadog_checks.base import AgentCheck
 except ImportError:
-    # 上記が失敗した場合、チェックは Agent バージョン < 6.6.0 で実行されています
+    # 失敗した場合は、Agent バージョン 6 以降で実行します
     from checks import AgentCheck
 
-# 特別な変数 __version__ の内容は、Agent ステータスページに表示されます
+# 特別な変数 __version__ の内容は Agent のステータスページに表示されます
 __version__ = "1.0.0"
 
 class HelloCheck(AgentCheck):
     def check(self, instance):
         self.gauge('hello.world', 1, tags=['TAG_KEY:TAG_VALUE'] + self.instance.get('tags', []))
-```
+{{< /code-block >}}
 
 ## その他の参考資料
 
 {{< partial name="whats-next/whats-next.html" >}}
 
-[1]: http://app.datadoghq.com/account/settings#agent
-[2]: /ja/agent/basic_agent_usage/source/?tab=agentv6v7#configuration
-[3]: /ja/agent/guide/agent-commands/?tab=agentv6v7#restart-the-agent
+[1]: http://app.datadoghq.com/account/settings/agent/latest
+[2]: /ja/agent/configuration/agent-configuration-files/#check-configuration-files
+[3]: /ja/agent/configuration/agent-commands/?tab=agentv6v7#restart-the-agent
 [4]: https://app.datadoghq.com/metric/summary
-[5]: https://datadog-checks-base.readthedocs.io/en/latest/datadog_checks.utils.html#module-datadog_checks.base.utils.subprocess_output
+[5]: https://github.com/DataDog/integrations-core/blob/9414403b361e583e8f1ebcdee2f006c384c61045/datadog_checks_base/datadog_checks/base/utils/subprocess_output.py#L22
 [6]: /ja/dashboards/
+[7]: /ja/agent/troubleshooting/agent_check_status/

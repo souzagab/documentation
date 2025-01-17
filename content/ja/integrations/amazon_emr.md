@@ -5,27 +5,32 @@ categories:
 - aws
 - cloud
 - log collection
+custom_kind: インテグレーション
 dependencies: []
-description: Amazon Elastic Map Reduce のキーメトリクスを追跡。
+description: Amazon EMR のキーメトリクスを追跡します。
 doc_link: https://docs.datadoghq.com/integrations/amazon_emr/
 draft: false
 git_integration_title: amazon_emr
 has_logo: true
-integration_id: amazon-emr
-integration_title: Amazon Elastic Map Reduce
+integration_id: ''
+integration_title: Amazon EMR
 integration_version: ''
 is_public: true
-kind: インテグレーション
 manifest_version: '1.0'
 name: amazon_emr
-public_title: Datadog-Amazon Elastic Map Reduce インテグレーション
-short_description: Amazon Elastic Map Reduce のキーメトリクスを追跡。
+public_title: Datadog-Amazon EMR インテグレーション
+short_description: Amazon EMR のキーメトリクスを追跡します。
 version: '1.0'
 ---
 
+<!--  SOURCED FROM https://github.com/DataDog/dogweb -->
 ## 概要
 
-Amazon Elastic MapReduce (Amazon EMR) は、膨大な量のデータを迅速かつコスト効率よく簡単に処理できる Web サービスです。
+<div class="alert alert-info">
+<a href="https://docs.datadoghq.com/data_jobs/">Data Jobs Monitoring</a> は、EMR クラスター上の Spark ジョブの観測、トラブルシューティング、コスト最適化を支援します。
+</div>
+
+Amazon EMR は、膨大な量のデータを迅速かつコスト効率よく簡単に処理できる Web サービスです。
 
 このインテグレーションを有効にすると、EMR メトリクスを Datadog に表示できます。
 
@@ -45,9 +50,9 @@ Amazon Elastic MapReduce (Amazon EMR) は、膨大な量のデータを迅速か
     | `elasticmapreduce:ListClusters`    | 使用できるクラスターを一覧表示します。          |
     | `elasticmapreduce:DescribeCluster` | CloudWatch EMR メトリクスにタグを追加します。|
 
-3. [Datadog - AWS EMR インテグレーション][5]をインストールします。
+3. [Datadog - Amazon EMR インテグレーション][5]をインストールします。
 
-### ログの収集
+### ログ収集
 
 #### ログの有効化
 
@@ -73,11 +78,11 @@ AWS から取得される各メトリクスには、ホスト名やセキュリ�
 
 ### イベント
 
-AWS Elastic MapReduce インテグレーションには、イベントは含まれません。
+Amazon EMR インテグレーションには、イベントは含まれません。
 
-### サービスのチェック
+### サービスチェック
 
-AWS Elastic MapReduce インテグレーションには、サービスのチェック機能は含まれません。
+Amazon EMR インテグレーションには、サービスのチェック機能は含まれません。
 
 ## トラブルシューティング
 
@@ -89,7 +94,7 @@ AWS Elastic MapReduce インテグレーションには、サービスのチェ�
 [4]: https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/load-balancer-authentication-access-control.html
 [5]: https://app.datadoghq.com/integrations/amazon-emr
 [6]: https://docs.datadoghq.com/ja/logs/guide/forwarder/
-[7]: https://docs.datadoghq.com/ja/integrations/amazon_web_services/?tab=allpermissions#collecting-logs-from-s3-buckets
-[8]: https://docs.datadoghq.com/ja/integrations/amazon_web_services/?tab=allpermissions#collecting-logs-from-cloudwatch-log-group
+[7]: https://docs.datadoghq.com/ja/logs/guide/send-aws-services-logs-with-the-datadog-lambda-function/#collecting-logs-from-s3-buckets
+[8]: https://docs.datadoghq.com/ja/logs/guide/send-aws-services-logs-with-the-datadog-lambda-function/#collecting-logs-from-cloudwatch-log-group
 [9]: https://github.com/DataDog/dogweb/blob/prod/integration/amazon_emr/amazon_emr_metadata.csv
 [10]: https://docs.datadoghq.com/ja/help/

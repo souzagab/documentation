@@ -1,7 +1,5 @@
 ---
 title: Trace Sampling and Storage
-kind: documentation
-is_beta: true
 aliases:
     - /tracing/faq/traces-sampling-and-storage/
     - /tracing/faq/how-long-is-tracing-data-stored/
@@ -11,9 +9,9 @@ further_reading:
 - link: "/tracing/trace_collection/"
   tag: "Documentation"
   text: "Learn how to setup APM tracing with your application"
-- link: "/tracing/services/services_list/"
+- link: "/tracing/service_catalog/"
   tag: "Documentation"
-  text: "Discover the list of services reporting to Datadog"
+  text: "Discover and catalog the services reporting to Datadog"
 - link: "/tracing/services/service_page/"
   tag: "Documentation"
   text: "Learn more about services in Datadog"
@@ -200,8 +198,10 @@ package main
 import (
     "log"
     "net/http"
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/ext // 2.x
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer // 2.x
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -225,8 +225,10 @@ import (
     "log"
     "net/http"
 
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/ext" // 2.x
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -377,7 +379,7 @@ Note that trace priority should be manually controlled only before any context p
 
 ## Trace storage
 
-Individual traces are stored for 15 days. This means that all **sampled** traces are retained for a period of 15 days and at the end of the 15th day, the entire set of expired traces is deleted. In addition, once a trace has been viewed by opening a full page, it continues to be available by using its trace ID in the URL: `{{< region-param key="dd_full_site" >}}/apm/trace/<TRACE_ID>`. This is true even if it "expires" from the UI. This behavior is independent of the UI retention time buckets.
+Individual traces are stored for 30 days. This means that all **sampled** traces are retained for a period of 30 days and at the end of the 30th day, the entire set of expired traces is deleted. In addition, once a trace has been viewed by opening a full page, it continues to be available by using its trace ID in the URL: `{{< region-param key="dd_full_site" >}}/apm/trace/<TRACE_ID>`. This is true even if it "expires" from the UI. This behavior is independent of the UI retention time buckets.
 
 {{< img src="tracing/guide/trace_sampling_and_storage/trace_id.png" alt="Trace ID" >}}
 

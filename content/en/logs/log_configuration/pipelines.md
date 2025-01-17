@@ -1,6 +1,5 @@
 ---
 title: Pipelines
-kind: documentation
 description: "Parse your logs using the Grok Processor"
 aliases:
   - /logs/processing/pipelines/
@@ -14,9 +13,18 @@ further_reading:
 - link: "/logs/explorer/"
   tag: "Documentation"
   text: "Learn how to explore your logs"
+- link: "/logs/troubleshooting/"
+  tag: "Documentation"
+  text: "Logs troubleshooting"
 - link: "https://learn.datadoghq.com/courses/going-deeper-with-logs-processing"
   tag: "Learning Center"
   text: "Going Deeper with Logs Processing"
+- link: "https://www.datadoghq.com/blog/monitor-cloudflare-zero-trust/"
+  tag: "Blog"
+  text: "Monitor Cloudflare Zero Trust with Datadog Cloud SIEM"
+- link: "https://www.datadoghq.com/blog/monitor-1password-datadog-cloud-siem/"
+  tag: "Blog"
+  text: "Monitor 1Password with Datadog Cloud SIEM"
 ---
 
 ## Overview
@@ -148,6 +156,19 @@ Specify alternate attributes to use as the source of a log's trace ID by setting
 [1]: /tracing/other_telemetry/connect_logs_and_traces/
 [2]: /logs/log_configuration/processors/#trace-remapper
 {{% /tab %}}
+
+{{% tab "Span ID" %}}
+
+#### Span ID attribute
+
+By default, Datadog tracers can [automatically inject span IDs into your logs][1]. However, if a JSON formatted log includes the following attributes, Datadog interprets its value as the log's `span_id`:
+
+* `dd.span_id`
+* `contextMap.dd.span_id`
+
+[1]: /tracing/other_telemetry/connect_logs_and_traces/
+{{% /tab %}}
+
 {{< /tabs >}}
 
 ## Create a pipeline
@@ -159,7 +180,7 @@ Specify alternate attributes to use as the source of a log's trace ID by setting
     **Note**: The pipeline filtering is applied before any of the pipeline's processors. For this reason, you cannot filter on an attribute that is extracted in the pipeline itself.
 
 4. Name your pipeline.
-5. (Optional) Grant editing access to processors in the pipeline.
+5. (Optional) Grant editing access to processors in the pipeline. If you assign a role to a pipeline, the role receives `logs_write_processor` [permissions][12] specifically scoped to that pipeline. Roles with `logs_write_processor` permissions assigned globally (by editing role), cannot be selected, as they have access to all pipelines.
 6. (Optional) Add tags and a description to the pipeline. The description and tags can be used to state the pipeline's purpose and which team owns it.
 7. Press **Create**.
 
@@ -173,7 +194,7 @@ An example of a log transformed by a pipeline:
 See the <a href="/integrations/#cat-log-collection">list of supported integrations</a>.
 </div>
 
-Integration processing pipelines are available for certain sources when they are set up to collect logs. These pipelines are **read-only** and parse out your logs in ways appropriate for the particular source. For integration logs, an integration pipeline is automatically installed that takes care of parsing your logs and adds the corresponding facet in your Logs Explorer.
+Integration processing pipelines are available for certain sources when they are set up to collect logs. These pipelines are **read-only** and parse out your logs in ways appropriate for the particular source. For integration logs, an integration pipeline is automatically installed that takes care of parsing your logs and adds the corresponding facet in your Log Explorer.
 
 To view an integration pipeline, navigate to the [Pipelines][5] page. To edit an integration pipeline, clone it and then edit the clone:
 
@@ -182,6 +203,8 @@ To view an integration pipeline, navigate to the [Pipelines][5] page. To edit an
 See the ELB logs example below:
 
 {{< img src="logs/processing/elb_log_post_processing.png" alt="ELB log post processing" style="width:70%;">}}
+
+**Note**: Integration pipelines cannot be deleted, only disabled.
 
 ### Integration pipeline library
 
@@ -203,7 +226,9 @@ It's also possible to copy an integration pipeline using the clone button.
 
 ### Processors
 
-A processor executes within a pipeline to complete a data-structuring action. See the [Processors docs][3] to learn how to add and configure a processor by processor type, within the app or with the API.
+A processor executes within a pipeline to complete a data-structuring action. See the [Processors docs][3] to learn how to add and configure a processor by processor type, within the app or with the API. 
+
+See [Parsing dates][10] for more information about parsing a custom date and time format and for information on the `timezone` parameter, which is needed if your timestamps are not in UTC.
 
 ### Nested pipelines
 
@@ -213,9 +238,11 @@ A pipeline can contain nested pipelines and processors whereas a nested pipeline
 
 {{< img src="logs/processing/pipelines/nested_pipeline.png" alt="Nested pipelines" style="width:80%;">}}
 
-It is possible to move a pipeline into another pipeline to transform it into a nested pipeline:
+Move a pipeline into another pipeline to make it into a nested pipeline:
 
-{{< img src="logs/processing/pipelines/move_to_pipeline.mp4" alt="Drag and drop nested pipelines" video="true" width="80%" >}}
+1. Hover over the pipeline you want to move, and click on the **Move to** icon.
+1. Select the pipeline you want to move the original pipeline into. **Note**: Pipelines containing nested pipelines can only be moved to another top level position. They cannot be moved into another pipeline.
+1. Click **Move**.
 
 ## Manage your pipelines
 
@@ -229,7 +256,7 @@ Reorder pipelines precisely with the `Move to` option in the sliding option pane
 
 ## Estimated usage metrics
 
-Estimated usage metrics are displayed per pipeline - specifically, the volume and count of logs being ingested and modified by each pipeline. There is also a link to the out-of-the-box [Logs Estimated Usage Dashboard][10] from every pipeline where you can view that pipeline's usage metrics in more detailed charts.
+Estimated usage metrics are displayed per pipeline - specifically, the volume and count of logs being ingested and modified by each pipeline. There is also a link to the out-of-the-box [Logs Estimated Usage Dashboard][11] from every pipeline where you can view that pipeline's usage metrics in more detailed charts.
 
 {{< img src="logs/processing/pipelines/log_pipeline_statistics.png" alt="How to get a quick view of your pipelines' usage metrics" style="width:50%;">}}
 
@@ -249,4 +276,6 @@ Estimated usage metrics are displayed per pipeline - specifically, the volume an
 [7]: https://app.datadoghq.com/logs/pipelines/pipeline/library
 [8]: https://app.datadoghq.com/logs/pipelines/remapping
 [9]: /integrations/#cat-log-collection
-[10]: https://app.datadoghq.com/dash/integration/logs_estimated_usage
+[10]: /logs/log_configuration/parsing/?tab=matchers#parsing-dates
+[11]: https://app.datadoghq.com/dash/integration/logs_estimated_usage
+[12]: /account_management/rbac/permissions/?tab=ui#log-management

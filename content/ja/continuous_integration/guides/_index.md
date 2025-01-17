@@ -5,18 +5,14 @@ cascade:
     rank: 20
     subcategory: CI Visibility ガイド
 disable_toc: true
-kind: ガイド
 private: true
 title: CI Visibility ガイド
 ---
 
-{{< whatsnext desc="CI Visibility ガイド:" >}}
-    {{< nextlink href="/continuous_integration/guides/flaky_test_management" >}}不安定なテストの管理{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/test_configurations" >}}テスト構成{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/rum_integration" >}}RUM によるブラウザテストのインスツルメント{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/rum_swift_integration" >}}RUM による Swift テストのインスツルメント{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/pull_request_comments" >}}GitHub のプルリクエストコメントでテストサマリーを有効にする{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/github_gating" >}}GitHub Actions のデプロイを Datadog モニターで選別する{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/developer_workflows" >}}Datadog で開発者のワークフローを強化する{{< /nextlink >}}
-    {{< nextlink href="/continuous_integration/guides/ingestion_control" >}}取り込み制御のための除外フィルターの作成{{< /nextlink >}}
+{{< whatsnext desc="Pipeline Visibility ガイド:" >}}
+    {{< nextlink href="/continuous_integration/guides/ingestion_control" >}}取り込み制御の除外フィルターを作成する{{< /nextlink >}}
+    {{< nextlink href="/continuous_integration/guides/pipeline_data_model" >}}パイプラインのデータモデルと実行タイプについて理解する{{< /nextlink >}}
+    {{< nextlink href="/continuous_integration/guides/infrastructure_metrics_with_gitlab" >}}Datadog で GitLab ジョブとインフラストラクチャーメトリクスを相関させる{{< /nextlink >}}
+    {{< nextlink href="/account_management/billing/ci_visibility/" >}}CI Visibility の請求に関する注意点{{< /nextlink >}}
+    {{< nextlink href="/continuous_integration/guides/identify_highest_impact_jobs_with_critical_path/" >}}パイプラインの実行時間を短縮するために、クリティカルパス上の CI ジョブを特定する{{< /nextlink >}}
 {{< /whatsnext >}}

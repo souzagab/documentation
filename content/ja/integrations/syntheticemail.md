@@ -1,10 +1,13 @@
 ---
+algolia:
+  subcategory: Marketplace インテグレーション
 app_id: rapdev-syntheticemail
 app_uuid: c3b29bd1-fb32-44ed-aaf5-34d6b8d84bbb
 assets:
   dashboards:
     Synthetic Email: assets/dashboards/synthetic_email.json
   integration:
+    auto_install: false
     configuration:
       spec: assets/configuration/spec.yaml
     events:
@@ -15,10 +18,11 @@ assets:
       prefix: rapdev.syntheticemail.
     service_checks:
       metadata_path: assets/service_checks.json
+    source_type_id: 10111
     source_type_name: Synthetic Email
   monitors:
-    Hop-count change: assets/monitors/hop_count_change.json
-    Performance degraded: assets/monitors/performance_degraded.json
+    Hop-count is changing: assets/monitors/hop_count_change.json
+    RTT time is experiencing degradation: assets/monitors/performance_degraded.json
 author:
   homepage: https://www.rapdev.io
   name: RapDev
@@ -27,6 +31,7 @@ author:
   vendor_id: rapdev
 categories:
 - マーケットプレイス
+custom_kind: インテグレーション
 dependencies: []
 display_on_public_website: true
 draft: false
@@ -35,12 +40,10 @@ integration_id: rapdev-syntheticemail
 integration_title: Synthetic Email
 integration_version: ''
 is_public: true
-kind: integration
 legal_terms:
   eula: assets/EULA.pdf
 manifest_version: 2.0.0
 name: syntheticemail
-oauth: {}
 pricing:
 - billing_type: tag_count
   includes_assets: true
@@ -49,7 +52,7 @@ pricing:
   short_description: メールボックス 1 個あたりの単価
   tag: mailbox
   unit_label: Mailbox
-  unit_price: 250
+  unit_price: 350.0
 public_title: Synthetic Email
 short_description: 世界中からのメールメールボックスのラウンドトリップパフォーマンスを監視する
 supported_os:
@@ -64,6 +67,7 @@ tile:
   - Supported OS::Windows
   - Category::Marketplace
   - Offering::Integration
+  - Submitted Data Type::Metrics
   configuration: README.md#Setup
   description: 世界中からのメールメールボックスのラウンドトリップパフォーマンスを監視する
   media:
@@ -80,11 +84,12 @@ tile:
   uninstallation: README.md#Uninstallation
 ---
 
+<!--  SOURCED FROM https://github.com/DataDog/marketplace -->
 ## 概要
 
 このインテグレーションは、メールボックスを監視し、Synthetic メッセージの送受信配信を測定します。このインテグレーションでは、Synthetic メール配信に 3 つの地理的なソースの場所である、バージニア (US)、フランクフルト (EU)、シドニー (AP) を使用します。このチェックは、アドレス `probe@synth-rapdev.io` からテストメールを送信し、メールボックスからの自動返信を待つことで機能します。このインテグレーションでは、ホップ数、ラウンドトリップ時間、テスト結果 (合格/不合格) を測定します。
 
-## サポート
+## Agent
 サポートまたは機能リクエストについては、以下のチャンネルで RapDev.io までお問い合わせください。
 
  - メール: support@rapdev.io 
@@ -97,4 +102,4 @@ tile:
 *お探しのインテグレーションが見つかりませんか？組織に役立つ重要なツールの導入をお考えですか？[こちら](mailto:support@rapdev.io)からメッセージをお送りいただければ、導入をサポートいたします！*
 
 ---
-このアプリケーションは Marketplace から入手でき、Datadog テクノロジーパートナーによってサポートされています。このアプリケーションを購入するには、<a href="https://app.datadoghq.com/marketplace/app/rapdev-syntheticemail" target="_blank">こちらをクリック</a>してください。
+このアプリケーションは Marketplace から入手でき、Datadog テクノロジーパートナーによってサポートされています。利用するには、<a href="https://app.datadoghq.com/marketplace/app/rapdev-syntheticemail" target="_blank">Marketplace でこのアプリケーションを購入してください</a>。

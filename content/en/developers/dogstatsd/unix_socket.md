@@ -1,6 +1,5 @@
 ---
 title: DogStatsD over Unix Domain Socket
-kind: documentation
 description: 'Usage documentation for DogStatsD over Unix Domain Sockets'
 aliases:
     - /developers/metrics/unix_socket/
@@ -11,9 +10,6 @@ further_reading:
     - link: 'developers/libraries'
       tag: 'Documentation'
       text: 'Official and Community created API and DogStatsD client libraries'
-    - link: 'https://github.com/DataDog/datadog-agent/tree/main/pkg/dogstatsd'
-      tag: 'GitHub'
-      text: 'DogStatsD source code'
 ---
 
 Starting with version 6.0, the Agent can ingest metrics with a Unix Domain Socket (UDS) as an alternative to UDP transport.
@@ -42,21 +38,31 @@ To enable the Agent DogStatsD UDS:
 {{< tabs >}}
 {{% tab "Host" %}}
 
-1. Edit the [Agent's main configuration file][1] to set `dogstatsd_socket` to the path where DogStatsD should create its listening socket:
+<div class="alert alert-warning"><strong>Note</strong>: The Agent install script automatically creates the socket file with the correct permissions, and <code>use_dogstatsd: true</code> & <code>dogstatsd_socket: "/var/run/datadog/dsd.socket"</code> are set by default. </div>
 
-    ```yaml
-    ## @param dogstatsd_socket - string - optional - default: ""
-    ## Listen for Dogstatsd metrics on a Unix Socket (*nix only).
-    ## Set to a valid and existing filesystem path to enable.
-    #
-    dogstatsd_socket: '/var/run/datadog/dsd.socket'
-    ```
+1. Create a socket file for DogStatsD to use as a listening socket. For example:
+   ```shell
+   sudo mkdir -p /var/run/datadog/
+   ```
+1. Ensure that the `dd-agent` user has read and write permissions to the socket file:
+   ```shell
+   sudo chown dd-agent:dd-agent /var/run/datadog/
+   ```
+1. Edit the [Agent's main configuration file][1]:
+   1. Set `use_dogstatsd` to `true`.
+   1. Set `dogstatsd_socket` to the path where DogStatsD should create its listening socket:
+      
+      ```yaml
+      ## @param dogstatsd_socket - string - optional - default: ""
+      ## Listen for Dogstatsd metrics on a Unix Socket (*nix only).
+      ## Set to a valid and existing filesystem path to enable.
+      #
+      dogstatsd_socket: "/var/run/datadog/dsd.socket"
+      ```
+1. [Restart your Agent][2].
 
-2. [Restart your Agent][2].
-
-
-[1]: /agent/guide/agent-configuration-files/#agent-main-configuration-file
-[2]: /agent/guide/agent-commands/
+[1]: /agent/configuration/agent-configuration-files/#agent-main-configuration-file
+[2]: /agent/configuration/agent-commands/
 {{% /tab %}}
 {{% tab "Docker" %}}
 
@@ -68,13 +74,56 @@ To enable the Agent DogStatsD UDS:
     - Start your application containers with `-v /var/run/datadog:/var/run/datadog:ro`
 
 {{% /tab %}}
+{{% tab "ECS Fargate" %}}
+
+1. In your task definition, set the socket path with the `DD_DOGSTATSD_SOCKET=<YOUR_UDS_PATH>` environment variable on the Agent container definition (example: `/var/run/datadog/dsd.socket`).
+
+2. Make the socket file accessible to the application containers by mounting a shared volume on both sides. This makes it possible for the application containers to access the socket from the Datadog Agent container.
+
+    1. Mount the empty folder in the `volumes` section of the task definition:
+
+        ```json
+        "volumes": [
+            {
+                "name": "dsdsocket",
+                "host": {}
+            }
+        ],
+        ```
+
+    1. In the `mountPoints` section of your Agent container, mount the socket folder:
+
+        ```json
+        "mountPoints": [
+            {
+            "containerPath": "/var/run/datadog",
+            "sourceVolume": "dsdsocket"
+            }
+        ],
+        ```
+
+    1. In the `mountPoints` section of your application containers, expose the same folder in your application containers:
+
+        <div class="alert alert-info">Remove <code>"readOnly": true</code> if your application containers need write access to the socket.</div> 
+
+        ```json
+        "mountPoints": [
+            {
+            "containerPath": "/var/run/datadog",
+            "sourceVolume": "dsdsocket",
+            "readOnly": true
+            }
+        ],
+        ```
+
+{{% /tab %}}
 {{% tab "Kubernetes" %}}
 
 1. Set the socket path with the `DD_DOGSTATSD_SOCKET=<YOUR_UDS_PATH>` environment variable on the Agent container (example: `/var/run/datadog/dsd.socket`).
 
 2. Make the socket file accessible to the application containers by mounting a host directory on both sides (read-only in your application containers and read-write in the Agent container). Mounting the parent folder instead of the individual socket enables socket communication to persist across DogStatsD restarts.
 
-    - Mount the socket folder in your `datadog-agent` container:
+    1. Mount the socket folder in your `datadog-agent` container:
 
         ```yaml
         volumeMounts:
@@ -87,7 +136,9 @@ To enable the Agent DogStatsD UDS:
               name: dsdsocket
         ```
 
-    - Expose the same folder in your application containers:
+    1. Expose the same folder in your application containers:
+
+       <div class="alert alert-info">Remove <code>"readOnly": true</code> if your application containers need write access to the socket.</div>
 
         ```yaml
         volumeMounts:
@@ -101,8 +152,6 @@ To enable the Agent DogStatsD UDS:
               name: dsdsocket
         ```
 
-        **Note**: Remove `readOnly: true` if your application containers need write access to the socket.
-
 {{% /tab %}}
 {{% tab "EKS Fargate" %}}
 
@@ -110,7 +159,7 @@ To enable the Agent DogStatsD UDS:
 
 2. Make the socket file accessible to the application containers by mounting an empty directory on both sides (read-only in your application containers and read-write in the Agent container). Mounting the parent folder instead of the individual socket enables socket communication to persist across DogStatsD restarts.
 
-    - Mount the empty folder in your pod spec:
+    1. Mount the empty folder in your pod spec:
 
         ```yaml
         volumes:
@@ -118,7 +167,7 @@ To enable the Agent DogStatsD UDS:
               name: dsdsocket
         ```
 
-    - Mount the socket folder in your `datadog-agent` container:
+    1. Mount the socket folder in your `datadog-agent` container:
 
         ```yaml
         volumeMounts:
@@ -126,7 +175,9 @@ To enable the Agent DogStatsD UDS:
               mountPath: /var/run/datadog
         ```
 
-    - Expose the same folder in your application containers:
+    1. Expose the same folder in your application containers:
+
+       <div class="alert alert-info">Remove <code>"readOnly": true</code> if your application containers need write access to the socket.</div>
 
         ```yaml
         volumeMounts:
@@ -134,8 +185,6 @@ To enable the Agent DogStatsD UDS:
               mountPath: /var/run/datadog
               readOnly: true
         ```
-
-        **Note**: Remove `readOnly: true` if your application containers need write access to the socket.
 
 {{% /tab %}}
 {{< /tabs >}}
@@ -189,9 +238,9 @@ Origin detection allows DogStatsD to detect where the container metrics come fro
 3. [Restart your Agent][3].
 
 
-[1]: /agent/guide/agent-configuration-files/#agent-main-configuration-file
+[1]: /agent/configuration/agent-configuration-files/#agent-main-configuration-file
 [2]: /getting_started/tagging/assigning_tags/#environment-variables
-[3]: /agent/guide/agent-commands/
+[3]: /agent/configuration/agent-commands/
 {{% /tab %}}
 {{% tab "Docker" %}}
 
@@ -204,6 +253,35 @@ When running inside a container, DogStatsD needs to run in the host's PID namesp
 
 [1]: /getting_started/tagging/assigning_tags/#environment-variables
 [2]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#task_definition_pidmode
+{{% /tab %}}
+{{% tab "ECS Fargate" %}}
+
+1. In your task definition, set the `DD_DOGSTATSD_ORIGIN_DETECTION` environment variable to true for the Agent container definition:
+
+    ```json
+    {
+        "name": "DD_DOGSTATSD_ORIGIN_DETECTION",
+        "value": "true"
+    },
+    ```
+
+2. Add the [PidMode parameter][2] in the task definition and set it to `task` as follows:
+
+    ```json
+    "pidMode": "task"
+    ```
+
+3. Optional - To configure [tag cardinality][1] for the metrics collected using origin detection, set the environment variable `DD_DOGSTATSD_TAG_CARDINALITY` to `low` (default), `orchestrator`, or `high`:
+
+    ```json
+    {
+        "name": "DD_DOGSTATSD_TAG_CARDINALITY",
+        "value": "low"
+    },
+    ```
+
+[1]: /getting_started/tagging/assigning_tags/#environment-variables
+[2]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#other_task_definition_params
 {{% /tab %}}
 {{% tab "Kubernetes" %}}
 

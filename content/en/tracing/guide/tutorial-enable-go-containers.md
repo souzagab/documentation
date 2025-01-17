@@ -1,24 +1,24 @@
 ---
 title: Tutorial - Enabling Tracing for a Go Application and Datadog Agent in Containers
-kind: guide
+
 further_reading:
 - link: /tracing/trace_collection/library_config/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Additional tracing library configuration options
 - link: /tracing/trace_collection/dd_libraries/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Detailed tracing library setup instructions
 - link: /tracing/trace_collection/compatibility/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Supported Go frameworks for automatic instrumentation
 - link: /tracing/trace_collection/custom_instrumentation/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Manually configuring traces and spans
 - link: /tracing/trace_pipeline/ingestion_mechanisms/
-  tags: Documentation
+  tag: "Documentation"
   text: Ingestion mechanisms
 - link: https://github.com/DataDog/dd-trace-Go
-  tags: GitHub
+  tag: "Source Code"
   text: Tracing library open source code repository
 ---
 
@@ -99,10 +99,16 @@ Next, configure the Go application to enable tracing. Because the Agent runs in 
 To enable tracing support, uncomment the following imports in `apm-tutorial-golang/cmd/notes/main.go`:
 
 {{< code-block lang="go" filename="cmd/notes/main.go" >}}
-sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
-chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
-httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
-"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+    sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql" // 1.x
+    chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi" // 1.x
+    httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http" // 1.x
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+     
+    // If you are using v2, the lines look like this:
+    // sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql/v2" // 2.x
+    // chitrace "github.com/DataDog/dd-trace-go/contrib/go-chi/chi/v2" // 2.x
+    // httptrace "github.com/DataDog/dd-trace-go/contrib/net/http/v2" // 2.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
 {{< /code-block >}}
 
 In the `main()` function, uncomment the following lines:
@@ -119,13 +125,13 @@ client = httptrace.WrapClient(client, httptrace.RTWithResourceNamer(func(req *ht
 {{< /code-block >}}
 
 {{< code-block lang="go" filename="cmd/notes/main.go" >}}
-r.Use(chitrace.Middleware(chitrace.WithServiceName("notes")))
+r.Use(chitrace.Middleware(chitrace.WithService("notes")))
 {{< /code-block >}}
 
 In `setupDB()`, uncomment the following lines:
 
 {{< code-block lang="go" filename="cmd/notes/main.go" >}}
-sqltrace.Register("sqlite3", &sqlite3.SQLiteDriver{}, sqltrace.WithServiceName("db"))
+sqltrace.Register("sqlite3", &sqlite3.SQLiteDriver{}, sqltrace.WithService("db"))
 db, err := sqltrace.Open("sqlite3", "file::memory:?cache=shared")
 {{< /code-block >}}
 
@@ -212,7 +218,7 @@ Use `curl` to again send requests to the application:
 
 Wait a few moments, and take a look at your Datadog UI. Navigate to [**APM > Traces**][11]. The Traces list shows something like this:
 
-{{< img src="tracing/guide/tutorials/tutorial-go-host-traces.png" alt="Traces view shows trace data coming in from host." style="width:100%;" >}}
+{{< img src="tracing/guide/tutorials/tutorial-go-host-traces2.png" alt="Traces view shows trace data coming in from host." style="width:100%;" >}}
 
 There are entries for the database (`db`) and the `notes` app. The traces list shows all the spans, when they started, what resource was tracked with the span, and how long it took.
 
@@ -253,23 +259,28 @@ Datadog has several fully supported libraries for Go that allow for automatic tr
 import (
   ...
 
-  sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
-  chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
-  httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
+  sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql" // 1.x
+  chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi" // 1.x
+  httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http" // 1.x
+  
+  // If you are using v2, the lines look like this:
+  // sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql/v2" // 2.x
+  // chitrace "github.com/DataDog/dd-trace-go/contrib/go-chi/chi/v2" // 2.x
+  // httptrace "github.com/DataDog/dd-trace-go/contrib/net/http/v2" // 2.x
   ...
 )
 {{< /code-block >}}
 
-In `cmd/notes/main.go`, the Datadog libraries are initialized with the `WithServiceName` option. For example, the `chitrace` library is initialized as follows:
+In `cmd/notes/main.go`, the Datadog libraries are initialized with the `WithService` option. For example, the `chitrace` library is initialized as follows:
 
 {{< code-block lang="go" filename="cmd/notes/main.go" disable_copy="true" collapsible="true" >}}
 r := chi.NewRouter()
 r.Use(middleware.Logger)
-r.Use(chitrace.Middleware(chitrace.WithServiceName("notes")))
+r.Use(chitrace.Middleware(chitrace.WithService("notes")))
 r.Mount("/", nr.Register())
 {{< /code-block >}}
 
-Using `chitrace.WithServiceName("notes")` ensures that all elements traced by the library fall under the service name `notes`.
+Using `chitrace.WithService("notes")` ensures that all elements traced by the library fall under the service name `notes`.
 
 The `main.go` file contains more implementation examples for each of these libraries. For an extensive list of libraries, see [Go Compatibility Requirements][16].
 
@@ -300,7 +311,8 @@ r.Delete("/notes/{noteID}", makeSpanMiddleware("DeleteNote", nr.DeleteNoteByID))
 Also remove the comment around the following import:
 
 {{< code-block lang="go" filename="notes/notesController.go" disable_copy="true" collapsible="true" >}}
-"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+// "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
 {{< /code-block >}}
 
 There are several examples of custom tracing in the sample application. Here are a couple more examples. Remove the comments to enable these spans:
@@ -347,8 +359,10 @@ To enable tracing in the calendar application:
 
 1. Uncomment the following lines in `cmd/calendar/main.go`:
    {{< code-block lang="go" filename="cmd/calendar/main.go" disable_copy="true" collapsible="true" >}}
-   chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
-   "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+   chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"  // 1.x
+   // chitrace "github.com/DataDog/dd-trace-go/contrib/go-chi/chi/v2" // 2.x
+   "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
    {{< /code-block >}}
 
    {{< code-block lang="go" filename="cmd/calendar/main.go" disable_copy="true" collapsible="true" >}}
@@ -357,7 +371,7 @@ To enable tracing in the calendar application:
    {{< /code-block >}}
 
    {{< code-block lang="go" filename="cmd/calendar/main.go" disable_copy="true" collapsible="true" >}}
-   r.Use(chitrace.Middleware(chitrace.WithServiceName("calendar")))
+   r.Use(chitrace.Middleware(chitrace.WithService("calendar")))
    {{< /code-block >}}
 
 1. Open `docker/all-docker-compose.yaml` and uncomment the `calendar` service to set up the Agent host and Unified Service Tags for the app and for Docker:
@@ -441,7 +455,7 @@ If you're not receiving traces as expected, set up debug mode for the Go tracer.
 [2]: /tracing/trace_collection/dd_libraries/go/
 [3]: /account_management/api-app-keys/
 [4]: /tracing/trace_collection/compatibility/go/
-[5]: https://app.datadoghq.com/account/settings#agent/overview
+[5]: https://app.datadoghq.com/account/settings/agent/latest?platform=overview
 [6]: /getting_started/site/
 [7]: https://www.baeldung.com/go-instrumentation
 [8]: https://app.datadoghq.com/event/explorer

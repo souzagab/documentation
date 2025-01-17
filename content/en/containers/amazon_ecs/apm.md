@@ -1,6 +1,5 @@
 ---
 title: Tracing ECS Applications
-kind: Documentation
 aliases:
   - /agent/amazon_ecs/apm
 further_reading:
@@ -191,7 +190,7 @@ Update the Task Definition's `entryPoint` with the following, substituting your 
 You can alternatively update your code to have the tracer set the hostname explicitly:
 
 ```ruby
-require 'ddtrace'
+require 'datadog' # Use 'ddtrace' if you're using v1.x
 require 'net/http'
 
 Datadog.configure do |c|
@@ -201,7 +200,7 @@ end
 
 {{< /programming-lang >}}
 
-{{< programming-lang lang="go" >}}
+{{< programming-lang lang="go">}}
 
 #### Launch time variable
 Update the Task Definition's `entryPoint` with the following, substituting your `<Go Startup Command>`:
@@ -223,7 +222,8 @@ package main
 import (
     "net/http"
     "io/ioutil"
-    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+    "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
 )
 
 func main() {

@@ -1,6 +1,5 @@
 ---
 title: Assigning Tags
-kind: documentation
 description: 'Learn how to assign tags in Datadog.'
 aliases:
     - /agent/tagging
@@ -95,8 +94,8 @@ hostname: mymachine.mydomain
 
 
 [1]: /getting_started/integrations/
-[2]: /agent/guide/agent-configuration-files/
-[3]: /getting_started/tagging/#defining-tags
+[2]: /agent/configuration/agent-configuration-files/
+[3]: /getting_started/tagging/#define-tags
 [4]: /metrics/custom_metrics/dogstatsd_metrics_submission/#host-tag-key
 [5]: /dashboards/querying/#arithmetic-between-two-metrics
 {{% /tab %}}
@@ -137,8 +136,8 @@ hostname: mymachine.mydomain
 
 
 [1]: /getting_started/integrations/
-[2]: /agent/guide/agent-configuration-files/
-[3]: /getting_started/tagging/#defining-tags
+[2]: /agent/configuration/agent-configuration-files/
+[3]: /getting_started/tagging/#define-tags
 [4]: /metrics/custom_metrics/dogstatsd_metrics_submission/#host-tag-key
 [5]: /dashboards/querying/#arithmetic-between-two-metrics
 {{% /tab %}}
@@ -160,7 +159,7 @@ For containerized environments, it is recommended to follow the [unified service
 
 #### Environment variables
 
-After installing the containerized Datadog Agent, you can set your host tags using the environment variable `DD_TAGS` in your Agents main configuration file.
+After installing the containerized Datadog Agent, you can set your host tags using the environment variable `DD_TAGS` in your Agents main configuration file. If you specify multiple tags, separate each one with a space.
 
 Datadog automatically collects common tags from [Docker, Kubernetes, ECS, Swarm, Mesos, Nomad, and Rancher][6]. To extract even more tags, use the following options:
 
@@ -244,6 +243,10 @@ There are two environment variables that set tag cardinality: `DD_CHECKS_TAG_CAR
 
 Depending on the cardinality, there is a different set of out-of-the box tags for [Kubernetes and OpenShift][7], and for [Docker, Rancher, and Mesos][8]. For ECS and Fargate, setting the variable to `orchestrator` adds the `task_arn` tag.
 
+**Notes**:
+- Sending container tags for DogStatsD metrics may create more metrics (one per container instead of one per host). This may impact your custom metrics billing.
+- In metrics, timestamps are rounded to the nearest second. If any points have the same timestamp, the latest point overwrites the previous ones. Setting higher cardinality may help prevent this issue.
+
 #### Traces
 
 The Datadog tracer can be configured with environment variables, system properties, or through configuration in code. The [Datadog tracing setup][9] documentation has information on tagging options and configuration for each tracer. You can also follow the [unified service tagging][2] documentation to configure your tracer for unified service tagging.
@@ -264,31 +267,32 @@ The span metadata above is invalid since the value of `key` cannot reference a s
 {{< tabs >}}
 {{% tab "Host Map" %}}
 
-Assign host tags in the UI using the [Host Map page][1]. Click on any hexagon (host) to show the host overlay on the bottom of the page. Then, under the *User* section, click the **Edit Tags** button. Enter the tags as a comma separated list, then click **Save Tags**. Changes made to host tags in the UI may take up to five minutes to apply.
+Assign host tags in the UI using the [Host Map page][1]. Click on any hexagon (host) to show the host overlay on the bottom of the page. Then, under the *User* section, click the **Add Tags** button. Enter the tags as a comma separated list, then click **Save Tags**. Changes made to host tags in the UI may take up to five minutes to apply.
 
-{{< img src="tagging/assigning_tags/hostmapuitags.png" alt="Host Map Tags" style="width:80%;">}}
+{{< img src="tagging/assigning_tags/host_add_tags.png" alt="Host map with an host details opened highlighting Add Tags button" style="width:80%;">}}
+
 
 [1]: /infrastructure/hostmap/
 {{% /tab %}}
 {{% tab "Infrastructure List" %}}
 
-Assign host tags in the UI using the [Infrastructure List page][1]. Click on any host to show the host overlay on the right of the page. Then, under the *User* section, click the **Edit Tags** button. Enter the tags as a comma separated list, then click **Save Tags**. Changes made to host tags in the UI may take up to five minutes to apply. Once you have added tags, ensure they are visible in the UI before attempting to add more tags.
+Assign host tags in the UI using the [Infrastructure List page][1]. Click on any host to show the host overlay on the right of the page. Then, under the *User* section, click the **Add Tags** button. Enter the tags as a comma separated list, then click **Save Tags**. Changes made to host tags in the UI may take up to five minutes to apply. After you add tags, ensure they are visible in the UI before attempting to add more tags.
 
-{{< img src="tagging/assigning_tags/hostuitags.png" alt="Infrastructure List Tags" style="width:80%;">}}
+{{< img src="tagging/assigning_tags/infrastructure_add_tags.png" alt="Infrastructure List with an Infrastructure details panel opened highlighting Add Tags button" style="width:80%;">}}
+
 
 [1]: /infrastructure/
 {{% /tab %}}
 {{% tab "Monitors" %}}
 
-From the [Manage Monitors][1] page, select the checkbox next to each monitor to add tags (select one or multiple monitors). Click the **Edit Tags** button. Enter a tag or select one used previously. Then click **Add Tag `tag:name`** or **Apply Changes**. If tags were added previously, multiple tags can be assigned at once using the tag checkboxes.
+From the [Manage Monitors][1] page, select the checkbox next to each monitor to add tags (select one or multiple monitors). Click the **Edit Tags** button. Enter a tag or select one used previously. Then click **Add Tag `tag:name`** or **Apply Changes**. If tags were added previously, multiple tags can be assigned at once using the tag checkboxes. For more information, see the [Manage Monitors documentation][2].
 
-{{< img src="tagging/assigning_tags/monitortags.png" alt="Manage Monitors Tags" style="width:80%;">}}
+When creating a monitor, assign monitor tags under step 4 *Say what's happening* or *Notify your Team*:
 
-When creating a monitor, assign monitor tags under step 4 *Say what's happening*:
+{{< img src="monitors/notifications/notifications_add_required_tags.png" alt="View of policy tag configuration. Underneath 'Policy tags' are three example tags, cost_center, product_id, and env, next to a 'Select value' dropdown." style="width:80%;" >}}
 
-{{< img src="tagging/assigning_tags/monitorindivdualtags.png" alt="Create Monitor Tags" style="width:80%;">}}
-
-[1]: /monitors/manage/
+[1]: https://app.datadoghq.com/monitors/manage
+[2]: /monitors/manage/
 {{% /tab %}}
 {{% tab "Distribution Metrics" %}}
 
@@ -379,7 +383,7 @@ sum:page.views{domain:example.com} by {host}
 
 ### DogStatsD
 
-Add tags to any metric, event, or service check you send to [DogStatsD][9]. For example, compare the performance of two algorithms by tagging a timer metric with the algorithm version:
+Add tags to any metric, event, or service check you send to [DogStatsD][10]. For example, compare the performance of two algorithms by tagging a timer metric with the algorithm version:
 
 ```python
 
@@ -392,15 +396,15 @@ def algorithm_two():
     # Do fancy things (maybe faster?) here ...
 ```
 
-**Note**: Tagging is a [Datadog-specific extension][10] to StatsD.
+**Note**: Tagging is a [Datadog-specific extension][11] to StatsD.
 
-Special consideration is necessary when assigning the `host` tag to DogStatsD metrics. For more information on the host tag key, see the [DogStatsD section][11].
+Special consideration is necessary when assigning the `host` tag to DogStatsD metrics. For more information on the host tag key, see the [Metrics Submission: DogStatsD][12] documentation.
 
 ## Further Reading
 
 {{< partial name="whats-next/whats-next.html" >}}
 
-[1]: /getting_started/tagging/#defining-tags
+[1]: /getting_started/tagging/#define-tags
 [2]: /getting_started/tagging/unified_service_tagging
 [3]: /integrations/#cat-cloud
 [4]: /getting_started/agent/#setup
@@ -411,3 +415,4 @@ Special consideration is necessary when assigning the `host` tag to DogStatsD me
 [9]: /tracing/setup/
 [10]: /developers/dogstatsd/
 [11]: /developers/community/libraries/
+[12]: /metrics/dogstatsd_metrics_submission/#host-tag

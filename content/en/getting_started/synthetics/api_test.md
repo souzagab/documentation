@@ -1,6 +1,5 @@
 ---
 title: Getting Started with API Tests
-kind: documentation
 further_reading:
 - link: 'https://learn.datadoghq.com/courses/intro-to-synthetic-tests'
   tag: 'Learning Center'
@@ -31,38 +30,49 @@ further_reading:
 
 ## Overview
 
-API tests **proactively monitor** that your **most important services** are available at anytime and from anywhere. [Single API tests][1] come in eight subtypes that allow you to launch requests on the different network layers of your systems (`HTTP`, `SSL`, `DNS`, `WebSocket`, `TCP`, `UDP`, `ICMP`, and `gRPC`). [Multistep API tests][2] enable you to run HTTP tests in sequence to monitor the uptime of key journeys at the API level.
+API tests **proactively monitor** that your **most important services** are available at anytime and from anywhere. [Single API tests][1] come in eight subtypes that allow you to launch requests on the different network layers of your systems (`HTTP`, `SSL`, `DNS`, `WebSocket`, `TCP`, `UDP`, `ICMP`, and `gRPC`). [Multistep API tests][2] enable you to run API tests in sequence to monitor the uptime of key journeys at the API level.
 
 ## Create a single API test
 
 HTTP tests monitor your API endpoints and alert you when response latency is high or fail to meet any conditions you define, such as expected HTTP status code, response headers, or response body content.
 
-{{< img src="getting_started/synthetics/api-test.png" alt="Overview of a Synthetics HTTP Test" style="width:100%;" >}}
+The examples below demonstrate how to create an [HTTP test][3], a subtype of [single API tests][1].
 
-The example below demonstrates how to create an [HTTP test][3], a subtype of [single API tests][1].
+1. In the Datadog site, hover over **Digital Experience** and select **[Tests][4]** (under **Synthetic Monitoring & Testing**).
 
-### Define request
-
-1. In the Datadog site, hover over **UX Monitoring** and select **[Synthetic Tests][4]**.
 2. Click **New Test** > **[New API test][5]**.
-3. Select the `HTTP` request type.
-4. Define your request:
 
-    - Add the URL of the endpoint you want to monitor. If you don't know what to start with, you can use `https://www.shopist.io/`, a test e-commerce web application. Defining the endpoint to test automatically populates the name of your test to `Test on www.shopist.io`. 
-    - You can select **Advanced Options** to set custom request options, certificates, authentication credentials, and more.  
-    
-      **Note:** You can create secure [global variables][6] to store credentials and create [local variables][7] to generate dynamic timestamps to use in your request payload. After creating these variables, type `{{` in any relevant field and select the variable to inject its value in your test options.  
-    
-      In this example, no specific advanced option is needed.
-    - You can set tags such as `env:prod` and `app:shopist` on your test. Tags allow you to keep your test suite organized and quickly find tests you're interested in on the homepage.
+3. You may create a test using one of the following options:
 
-5. Click **Test URL** to trigger a sample test run.
+   - **Create a test from a template**:
 
-{{< img src="getting_started/synthetics/api-test-config-3.png" alt="API test configuration" style="width:100%;">}}
+      1. Hover over one of the pre-populated templates and click **View Template**. This opens a side panel displaying pre-populated configuration information, including: Test Details, Request Details, Assertions, Alert Conditions, and Monitor Settings.
+      2. Click **+Create Test** to open the **Define Request** page, where you can review and edit the pre-populated configuration options. The fields presented are identical to those available when creating a test from scratch.
+      3. Click **Save Details** to submit your API test.<br /><br>
+
+        {{< img src="getting_started/synthetics/synthetics_templates_api_video.mp4" alt="Video of Synthetics API test landing page with templates" video="true" >}}
+
+   - **Build a test from scratch**:
+
+      1. To build a test from scratch, click the **+ Start from scratch** template, then select the `HTTP` request type.
+
+      2. Add the URL of the endpoint you want to monitor. If you don't know what to start with, you can use `https://www.shopist.io/`, a test e-commerce web application. If you use the test Shopist URL, the name of your test is automatically populated as `Test on shopist.io`.  
+
+      3. Optionally, select **Advanced Options** to set custom request options, add certificates and authentication credentials, and create secure [global variables][6] or [local variables][7] for dynamic inputs.
+
+         **Note**: Type `{{` in any relevant field to select a variable and inject its value into your test options. 
+          
+      4. Optionally, set tags such as `env:prod` and `app:shopist` on your test. Tags allow you to keep your test suite organized and quickly find tests you're interested in on the homepage.
+
+      5. Click **Send** to trigger a sample test run.
+
+         {{< img src="getting_started/synthetics/api-test-config-4.png" alt="API test configuration" style="width:90%;">}}
+
+      6. Click **Create Test** to submit your API test.
 
 ### Define assertions
 
-Clicking **Test URL** automatically populates basic assertions about your endpoint's response. Assertions define what a successful test run is.
+Clicking **Send** automatically populates basic assertions about your endpoint's response. Assertions define what a successful test run is.
 
 In this example, three default assertions populate after triggering the sample test run:
 
@@ -112,7 +122,7 @@ When you're ready to save your test configuration and monitor, click **Create**.
 
 {{< img src="getting_started/synthetics/multistep-api-test.png" alt="Overview of a Mulistep Synthetics API Test" style="width:100%;" >}}
 
-Similar to [HTTP tests][3], multistep API tests alert you when your endpoints become too slow or fail to meet any conditions you defined. You can create variables from individual step responses and re-inject their values in subsequent steps, chaining steps together in a way that mimics the behavior of your application or service.
+Similar to [API tests][3], multistep API tests alert you when your endpoints become too slow or fail to meet any conditions you defined. You can create variables from individual step responses and re-inject their values in subsequent steps, chaining steps together in a way that mimics the behavior of your application or service.
 
 The example test below demonstrates the creation of a multistep API test that monitors the addition of an item to a cart. This test contains three steps: 
 
@@ -210,7 +220,7 @@ With Datadog's [APM integration with Synthetic Monitoring][14], access the root 
 [1]: /synthetics/api_tests/
 [2]: /synthetics/multistep
 [3]: /synthetics/api_tests/http_tests
-[4]: https://app.datadoghq.com/synthetics/list
+[4]: https://app.datadoghq.com/synthetics/tests
 [5]: https://app.datadoghq.com/synthetics/create
 [6]: /synthetics/settings/#global-variables
 [7]: /synthetics/api_tests/http_tests#variables
@@ -221,3 +231,4 @@ With Datadog's [APM integration with Synthetic Monitoring][14], access the root 
 [12]: https://app.datadoghq.com/synthetics/multi-step/create
 [13]: /synthetics/guide/synthetic-test-monitors
 [14]: /synthetics/apm/
+[15]: /synthetics/api_tests/grpc_tests

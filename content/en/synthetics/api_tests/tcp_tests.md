@@ -1,6 +1,5 @@
 ---
-title: TCP Tests
-kind: documentation
+title: TCP Testing
 description: Simulate TCP connections on your hosts
 aliases:
   - /synthetics/tcp_test
@@ -33,19 +32,33 @@ TCP tests can run from both [managed](#select-locations) and [private locations]
 
 ## Configuration
 
-After choosing to create a `TCP` test, define your test's request.
+You may create a test using one of the following options:
 
-### Define request
+- **Create a test from a template**:
+   
+     1. Hover over one of the pre-populated templates and click **View Template**. This opens a side panel displaying pre-populated configuration information, including: Test Details, Request Details, Assertions, Alert Conditions, and Monitor Settings.
+     2. Click **+Create Test** to open the **Define Request** page, where you can review and edit the pre-populated configuration options. The fields presented are identical to those available when creating a test from scratch.
+     3. Click **Save Details** to submit your API test.<br /><br>
+        {{< img src="getting_started/synthetics/synthetics_templates_api_video.mp4" alt="Video of Synthetics API test landing page with templates" video="true" >}}
 
-1. Specify the **Host** and the **Port** to run your test on. By default, the port is set to `443`.
-2. Decide whether or not to **Track number of network hops (TTL)**. This option allows you to assert on the number of network hops and to have access to a TCP Traceroute in your test results.
-3. Specify the amount of time in seconds before the test times out (optional).
-4. **Name** your TCP test.
-5. Add `env` **Tags** as well as any other tag to your TCP test. You can then use these tags to quickly filter through your Synthetic tests on the [Synthetic Monitoring homepage][3].
+- **Build a test from scratch**:
 
-{{< img src="synthetics/api_tests/tcp_test_config.png" alt="Define TCP connection" style="width:90%;" >}}
+    1. To build a test from scratch, click the **+ Start from scratch** template, then select the `TCP` request type.
+    1. Specify the **Host** and the **Port** to run your test on.
+    1. Decide whether or not to **Track number of network hops (TTL)**. This option allows you to assert on the number of network hops and to have access to a TCP Traceroute in your test results.
+    1. Specify the amount of time in seconds before the test times out (optional).
+    1. **Name** your TCP test.
+    1. Add Environment **Tags** as well as any other tag to your TCP test. You can then use these tags to filter through your Synthetic tests on the [Synthetic Monitoring & Continuous Testing page][3]. 
+    1. Click **Test Host** to try out the request configuration. A response preview is displayed on the right side of your screen.<br /><br>
 
-Click **Test URL** to try out the request configuration. A response preview is displayed on the right side of your screen.
+       {{< img src="synthetics/api_tests/tcp_test_config_2.png" alt="Define TCP connection" style="width:90%;" >}}
+
+    8. Click **Create Test** to submit your API test.
+
+
+### Snippets
+
+{{% synthetics-api-tests-snippets %}}
 
 ### Define assertions
 
@@ -69,7 +82,7 @@ If a test contains an assertion on the response body and the timeout limit is re
 
 Select the **Locations** to run your TCP test from. TCP tests can run from both managed and [private locations][1] depending on your preference for launching the connection from outside or inside your network.
 
-{{% managed-locations %}} 
+{{% managed-locations %}}
 
 ### Specify test frequency
 
@@ -79,47 +92,7 @@ TCP tests can run:
 * [**Within your CI/CD pipelines**][2].
 * **On-demand** to run your tests whenever makes the most sense for your team.
 
-### Define alert conditions
-
-Set alert conditions to determine the circumstances under which you want a test to fail and trigger an alert.
-
-#### Alerting rule
-
-When you set the alert conditions to: `An alert is triggered if your test fails for X minutes from any n of N locations`, an alert is triggered only if these two conditions are true:
-
-* At least one location was in failure (at least one assertion failed) during the last *X* minutes.
-* At one moment during the last *X* minutes, at least *n* locations were in failure.
-
-#### Fast retry
-
-Your test can trigger retries `X` times after `Y` ms in case of a failed test result. Customize the retry interval to suit your alerting sensibility.
-
-Location uptime is computed on a per-evaluation basis (whether the last test result before evaluation was up or down). The total uptime is computed based on the configured alert conditions. Notifications sent are based on the total uptime.
-
-### Configure the test monitor
-
-A notification is sent by your test based on the [alerting conditions](#define-alert-conditions) previously defined. Use this section to define how and what to message your teams.
-
-1. [Similar to how you configure monitors][4], select **users and/or services** that should receive notifications either by adding a `@notification`to the message or by searching for team members and connected integrations with the dropdown box.
-
-2. Enter the notification **message** for your test. This field allows standard [Markdown formatting][5] and supports the following [conditional variables][6]:
-
-    | Conditional Variable       | Description                                                         |
-    |----------------------------|---------------------------------------------------------------------|
-    | `{{#is_alert}}`            | Show when the test alerts.                                          |
-    | `{{^is_alert}}`            | Show unless the test alerts.                                        |
-    | `{{#is_recovery}}`         | Show when the test recovers from an alert.                          |
-    | `{{^is_recovery}}`         | Show unless the test recovers from an alert.                        |
-    | `{{#is_renotify}}`         | Show when the monitor renotifies.                                   |
-    | `{{^is_renotify}}`         | Show unless the monitor renotifies.                                 |
-    | `{{#is_priority}}`         | Show when the monitor matches priority (P1 to P5).                  |
-    | `{{^is_priority}}`         | Show unless the monitor matches priority (P1 to P5).                |
-
-3. Specify how often you want your test to **re-send the notification message** in case of test failure. To prevent renotification on failing tests, leave the option as `Never renotify if the monitor has not been resolved`.
-
-4. Click **Create** to save your test configuration and monitor.
-
-For more information, see [Using Synthetic Test Monitors][7].
+{{% synthetics-alerting-monitoring %}}
 
 {{% synthetics-variables %}}
 
@@ -131,7 +104,7 @@ To display your list of variables, type `{{` in your desired field.
 
 ## Test failure
 
-A test is considered `FAILED` if it does not satisfy one or more assertions or if the request prematurely failed. In some cases, the test can fail without testing the assertions against the endpoint. 
+A test is considered `FAILED` if it does not satisfy one or more assertions or if the request prematurely failed. In some cases, the test can fail without testing the assertions against the endpoint.
 
 These reasons include the following:
 
@@ -141,12 +114,12 @@ These reasons include the following:
 `DNS`
 : DNS entry not found for the test URL. Possible causes include misconfigured test URL or the wrong configuration of your DNS entries.
 
-`INVALID_REQUEST` 
+`INVALID_REQUEST`
 : The configuration of the test is invalid (for example, a typo in the URL).
 
 `TIMEOUT`
 : The request couldn't be completed in a reasonable time. Two types of `TIMEOUT` can happen:
-  - `TIMEOUT: The request couldn't be completed in a reasonable time.` indicates that the request duration hit the test defined timeout (default is set to 60s). 
+  - `TIMEOUT: The request couldn't be completed in a reasonable time.` indicates that the request duration hit the test defined timeout (default is set to 60s).
   For each request only the completed stages for the request are displayed in the network waterfall. For example, in the case of `Total response time` only being displayed, the timeout occurred during the DNS resolution.
   - `TIMEOUT: Overall test execution couldn't be completed in a reasonable time.` indicates that the test duration (request + assertions) hits the maximum duration (60.5s).
 
@@ -158,11 +131,7 @@ If you are using the [custom role feature][10], add your user to any custom role
 
 ### Restrict access
 
-Access restriction is available for customers using [custom roles][11] on their accounts.
-
-You can restrict access to a TCP test based on the roles in your organization. When creating a TCP test, choose which roles (in addition to your user) can read and write your test. 
-
-{{< img src="synthetics/settings/restrict_access.png" alt="Set permissions for your test" style="width:70%;" >}}
+{{% synthetics_grace_permissions %}}
 
 ## Further Reading
 
@@ -171,11 +140,10 @@ You can restrict access to a TCP test based on the roles in your organization. W
 [1]: /synthetics/private_locations
 [2]: /synthetics/cicd_integrations
 [3]: /synthetics/search/#search
-[4]: /monitors/notify/#notify-your-team
+[4]: /monitors/notify/#configure-notifications-and-automations
 [5]: https://www.markdownguide.org/basic-syntax/
 [6]: /monitors/notify/?tab=is_recoveryis_alert_recovery#conditional-variables
 [7]: /synthetics/guide/synthetic-test-monitors
 [8]: /synthetics/settings/#global-variables
 [9]: /account_management/rbac/
 [10]: /account_management/rbac#custom-roles
-[11]: /account_management/rbac/#create-a-custom-role

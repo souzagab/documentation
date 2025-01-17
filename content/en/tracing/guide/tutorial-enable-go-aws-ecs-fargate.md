@@ -1,24 +1,24 @@
 ---
-title: Tutorial - Enabling Tracing for a Go Application on AWS ECS with Fargate
-kind: guide
+title: Tutorial - Enabling Tracing for a Go Application on Amazon ECS with Fargate
+
 further_reading:
 - link: /tracing/trace_collection/library_config/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Additional tracing library configuration options
 - link: /tracing/trace_collection/dd_libraries/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Detailed tracing library setup instructions
 - link: /tracing/trace_collection/compatibility/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Supported Go frameworks for automatic instrumentation
 - link: /tracing/trace_collection/custom_instrumentation/go/
-  tags: Documentation
+  tag: "Documentation"
   text: Manually configuring traces and spans
 - link: /tracing/trace_pipeline/ingestion_mechanisms/
-  tags: Documentation
+  tag: "Documentation"
   text: Ingestion mechanisms
 - link: https://github.com/DataDog/dd-trace-Go
-  tags: GitHub
+  tag: "Source Code"
   text: Tracing library open source code repository
 ---
 
@@ -38,8 +38,8 @@ See [Tracing Go Applications][2] for general comprehensive tracing setup documen
 - Git
 - Docker
 - Terraform
-- AWS ECS
-- an AWS ECR repository for hosting images
+- Amazon ECS
+- an Amazon ECR repository for hosting images
 - An AWS IAM user with `AdministratorAccess` permission. You must add the profile to your local credentials file using the access and secret access keys. For more information, read [Configuring the AWS SDK for Go V2][4].
 
 ## Install the sample Go application
@@ -56,7 +56,7 @@ In addition, this tutorial uses several configuration files in the `terraform/Fa
 
 ### Initial ECS setup
 
-The application requires some initial configuration, including adding your AWS profile (already configured with the correct permissions to create an ECS cluster and read from ECR), AWS region, and AWS ECR repository.
+The application requires some initial configuration, including adding your AWS profile (already configured with the correct permissions to create an ECS cluster and read from ECR), AWS region, and Amazon ECR repository.
 
 Open `terraform/Fargate/global_constants/variables.tf`. Replace the variable values below with your correct AWS account information:
 
@@ -109,7 +109,7 @@ Your application (without tracing enabled) is containerized and available for EC
 
 Start the application and send some requests without tracing. After you've seen how the application works, you'll instrument it using the tracing library and Datadog Agent.
 
-To start, use a Terraform script to deploy to AWS ECS:
+To start, use a Terraform script to deploy to Amazon ECS:
 
 1. From the `terraform/Fargate/deployment` directory, run the following commands:
 
@@ -137,7 +137,7 @@ To start, use a Terraform script to deploy to AWS ECS:
    `curl -X GET 'BASE_DOMAIN:8080/notes'`
    : `[{"id":1,"description":"hello"}]`
 
-   `curl -X PUT 'BASE_DOMAIN:8080/notes?id=1&desc=UpdatedNote'`
+   `curl -X PUT 'BASE_DOMAIN:8080/notes/1?desc=UpdatedNote'`
    : `{"id":1,"description":"UpdatedNote"}`
 
    `curl -X GET 'BASE_DOMAIN:8080/notes'`
@@ -162,10 +162,16 @@ To enable tracing support:
 1. Uncomment the following imports in `apm-tutorial-golang/cmd/notes/main.go`:
 
    {{< code-block lang="go" filename="cmd/notes/main.go">}}
-     sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
-     chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
-     httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
-     "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+     sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql" // 1.x
+     chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi" // 1.x
+     httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http" // 1.x
+     "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+     
+     // If you are using v2, the lines look like this:
+     // sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql/v2" // 2.x
+     // chitrace "github.com/DataDog/dd-trace-go/contrib/go-chi/chi/v2" // 2.x
+     // httptrace "github.com/DataDog/dd-trace-go/contrib/net/http/v2" // 2.x
+     // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
    {{< /code-block >}}
 
 1. In the `main()` function, uncomment the following lines:
@@ -180,11 +186,11 @@ To enable tracing support:
    })){{< /code-block >}}
 
    {{< code-block lang="go" filename="cmd/notes/main.go" >}}
-   r.Use(chitrace.Middleware(chitrace.WithServiceName("notes"))){{< /code-block >}}
+   r.Use(chitrace.Middleware(chitrace.WithService("notes"))){{< /code-block >}}
 
 1. In `setupDB()`, uncomment the following lines:
    {{< code-block lang="go" filename="cmd/notes/main.go" >}}
-   sqltrace.Register("sqlite3", &sqlite3.SQLiteDriver{}, sqltrace.WithServiceName("db"))
+   sqltrace.Register("sqlite3", &sqlite3.SQLiteDriver{}, sqltrace.WithService("db"))
    db, err := sqltrace.Open("sqlite3", "file::memory:?cache=shared"){{< /code-block >}}
 
    {{< code-block lang="go" filename="cmd/notes/main.go" >}}
@@ -213,7 +219,9 @@ To enable tracing support:
    Also remove the comment around the following import:
 
    {{< code-block lang="go" disable_copy="true" filename="notes/notesController.go" collapsible="true" >}}
-   "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"{{< /code-block >}}
+   "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer" // 1.x
+    // "github.com/DataDog/dd-trace-go/v2/ddtrace/tracer" // 2.x
+   {{< /code-block >}}
 
 1. The `doLongRunningProcess` function creates child spans from a parent context. Remove the comments to enable it:
    {{< code-block lang="go" filename="notes/notesHelper.go" disable_copy="true" collapsible="true" >}}
@@ -345,7 +353,7 @@ Your multi-service application with tracing enabled is containerized and availab
 
 Redeploy the application and exercise the API:
 
-1. Redeploy the application to AWS ECS using the [same terraform commands as before](#deploy-the-application), but with the instrumented version of the configuration files. From the `terraform/Fargate/deployment` directory, run the following commands:
+1. Redeploy the application to Amazon ECS using the [same terraform commands as before](#deploy-the-application), but with the instrumented version of the configuration files. From the `terraform/Fargate/deployment` directory, run the following commands:
 
    ```shell
    terraform init
@@ -369,7 +377,7 @@ Redeploy the application and exercise the API:
    `curl -X GET 'BASE_DOMAIN:8080/notes'`
    : `[{"id":1,"description":"hello"}]`
 
-   `curl -X PUT 'BASE_DOMAIN:8080/notes?id=1&desc=UpdatedNote'`
+   `curl -X PUT 'BASE_DOMAIN:8080/notes/1?desc=UpdatedNote'`
    : `{"id":1,"description":"UpdatedNote"}`
 
    `curl -X GET 'BASE_DOMAIN:8080/notes'`
@@ -380,7 +388,7 @@ Redeploy the application and exercise the API:
    : This command calls both the `notes` and `calendar` services.
 
 4. Wait a few moments, and take a look at your Datadog UI. Navigate to [**APM > Traces**][9]. The Traces list shows something like this:
-   {{< img src="tracing/guide/tutorials/tutorial-go-host-traces.png" alt="Traces view shows trace data coming in from host." style="width:100%;" >}}
+   {{< img src="tracing/guide/tutorials/tutorial-go-host-traces2.png" alt="Traces view shows trace data coming in from host." style="width:100%;" >}}
 
    There are entries for the database (`db`) and the `notes` app. The traces list shows all the spans, when they started, what resource was tracked with the span, and how long it took.
 

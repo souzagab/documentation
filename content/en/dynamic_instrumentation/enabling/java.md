@@ -1,10 +1,8 @@
 ---
 title: Enable Dynamic Instrumentation for Java
-kind: Documentation
 aliases:
     - /tracing/dynamic_instrumentation/enabling/java/
-is_beta: true
-private: true
+private: false
 code_lang: java
 type: multi-code-lang
 code_lang_weight: 10
@@ -18,19 +16,34 @@ Dynamic Instrumentation is a feature of supporting Datadog tracing libraries. If
 
 ## Requirements
 
-The Datadog Dynamic Instrumentation library is supported in JDK version 8 and above.
+- The Datadog Dynamic Instrumentation library is supported in JDK version 8 and above.
+- For a better experience, Datadog recommends enabling [autocomplete and search (in Preview)][7].
 
 ## Installation
 
-1. Install or upgrade your Agent to version [7.41.1][2]+.
+1. Install or upgrade your Agent to version [7.45.0][2] or higher.
 2. If you don't already have APM enabled, in your Agent configuration, set the `DD_APM_ENABLED` environment variable to `true` and listening to the port `8126/TCP`.
 
 3. Download `dd-java-agent.jar`:
-
+ {{< tabs >}}
+ {{% tab "Wget" %}}
    ```shell
    wget -O dd-java-agent.jar 'https://dtdg.co/latest-java-tracer'
    ```
-   **Note**: Dynamic Instrumentation is available in the `dd-java-agent.jar` library in versions 1.8.0 and later.
+{{% /tab %}}
+{{% tab "cURL" %}}
+   ```shell
+   curl -Lo dd-java-agent.jar 'https://dtdg.co/latest-java-tracer'
+   ```
+{{% /tab %}}
+{{% tab "Dockerfile" %}}
+   ```dockerfile
+   ADD 'https://dtdg.co/latest-java-tracer' dd-java-agent.jar
+   ```
+{{% /tab %}}
+{{< /tabs >}}
+
+   **Note**: Dynamic Instrumentation is available in the `dd-java-agent.jar` library in versions 1.34.0 and later.
 
 3. Run your service with Dynamic Instrumentation enabled by setting `-Ddd.dynamic.instrumentation.enabled` flag or `DD_DYNAMIC_INSTRUMENTATION_ENABLED` environment variable to `true`. Specify `dd.service`, `dd.env`, and `dd.version` Unified Service Tags so you can filter and group your probes and target active clients across these dimensions.
    {{< tabs >}}
@@ -80,7 +93,7 @@ Configure Dynamic Instrumentation using the following environment variables:
 | ------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `DD_DYNAMIC_INSTRUMENTATION_ENABLED`             | Boolean       | Alternate for `-Ddd.dynamic.instrumentation.enabled` argument. Set to `true` to enable Dynamic Instrumentation.           |
 | `DD_SERVICE`                                     | String        | The [service][5] name, for example, `web-backend`.                                                                        |
-| `DD_ENV`                                         | String        | The [environment][5] name, for example: `production`.                                                                     |
+| `DD_ENV`                                         | String        | The [environment][5] name, for example, `production`.                                                                     |
 | `DD_VERSION`                                     | String        | The [version][5] of your service.                                                                                         |
 | `DD_TAGS`                                        | String        | Tags to apply to produced data. Must be a list of `<key>:<value>` separated by commas such as: `layer:api,team:intake`.   |
 
@@ -88,13 +101,14 @@ Configure Dynamic Instrumentation using the following environment variables:
 
 See [Dynamic Instrumentation][6] for information about setting snapshot and metric probes and browsing and indexing the data.
 
-## Further Reading
+## Further reading
 
 {{< partial name="whats-next/whats-next.html" >}}
 
 [1]: /tracing/trace_collection/
-[2]: https://app.datadoghq.com/account/settings#agent/overview
+[2]: https://app.datadoghq.com/account/settings/agent/latest?platform=overview
 [3]: https://docs.oracle.com/javase/7/docs/technotes/tools/solaris/java.html
 [4]: https://app.datadoghq.com/dynamic-instrumentation
 [5]: /getting_started/tagging/unified_service_tagging
 [6]: /tracing/dynamic_instrumentation/
+[7]: /dynamic_instrumentation/symdb/

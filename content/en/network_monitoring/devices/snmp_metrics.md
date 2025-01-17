@@ -1,9 +1,5 @@
 ---
-title: Collect SNMP Metrics From Your Network Devices
-kind: documentation
-aliases:
-    - /network_performance_monitoring/devices/setup/
-    - /network_monitoring/devices/setup/
+title: SNMP Metrics
 further_reading:
 - link: "/network_monitoring/devices/profiles"
   tag: "Documentation"
@@ -18,7 +14,21 @@ further_reading:
 
 ## Installation
 
-Network Device Monitoring relies on the SNMP Integration included in the [Datadog Agent][1] package. Ensure you are using Agent v7.32+. No additional installation is necessary.
+Network Device Monitoring relies on the SNMP Integration included in the [Datadog Agent][1] package, and supports all three versions of SNMP: `SNMPv1`, `SNMPv2`, and `SNMPv3`. During discovery, the SNMP port (default 161) is polled. A device is considered discovered if there is a response and a matching profile.
+
+## Pre-requisites
+
+Agent v7.32+
+
+## How it works
+
+The following diagram illustrates the default ports and protocols between the Datadog Agent and the device being monitored. For SNMP metrics, the Datadog Agent polls the devices with Autodiscovery, or based on manual device IP configuration. The Datadog Agent, configured with NDM and deployed on-premises or in the cloud, consolidates all collected device and network data from your network and sends it to Datadog over HTTPS on port `443`. This provides unified, full-stack observability of metrics, logs, traces, monitors, and dashboards.
+
+{{< img src="/network_device_monitoring/snmp/snmp_device_polling.png" alt="NDM Diagram showing the flow for SNMP device polling." style="width:90%;" >}}
+
+## Next steps
+
+Follow the instructions below to configure Datadog to collect SNMP metrics from your network devices.
 
 ## Configuration
 
@@ -26,8 +36,11 @@ Datadog Network Device Monitoring supports collecting metrics from individual de
 
 Choose your collection strategy based on the number of devices present on your network, and how dynamic your network is (meaning frequency of adding or removing devices):
 
-- For small and mostly static networks, see [Monitoring individual devices](#monitoring-individual-devices).
-- For larger or dynamic networks, see [Autodiscovery](#autodiscovery).
+[Monitoring individual devices](#monitoring-individual-devices)
+: For small and mostly static networks.
+
+[Autodiscovery](#autodiscovery)
+: For larger or dynamic networks.
 
 Regardless of the collection strategy, leverage Datadog's [sysObjectID mapped device profiles][2] to automatically collect relevant metrics from your devices.
 
@@ -81,7 +94,7 @@ To monitor individual devices:
 
 - [Restart the Agent][5].
 
-After setup, the Agent collects relevant metrics by matching your devices to one of [Datadog's device profiles][6].
+After setup, the Agent collects relevant metrics by matching your devices to one of [Datadog's supported device profiles][6].
 
 To expand your setup:
 
@@ -90,9 +103,9 @@ To expand your setup:
 
 ### Autodiscovery
 
-An alternative to specifying individual devices is to use autodiscovery to automatically discover all the devices on your network.
+An alternative to specifying individual devices is to use Autodiscovery to automatically discover all the devices on your network.
 
-Autodiscovery polls each IP on the configured subnet, and checks for a response from the device. Then, the Datadog Agent looks up the `sysObjectID` of the discovered device and maps it to one of [Datadog's device profiles][6]. The profiles contain lists of predefined metrics to collect for various types of devices.
+Autodiscovery polls each IP on the configured subnet, and checks for a response from the device. Then, the Datadog Agent looks up the `sysObjectID` of the discovered device and maps it to one of [Datadog's supported device profiles][6]. The profiles contain lists of predefined metrics to collect for various types of devices.
 
 To use Autodiscovery with Network Device Monitoring:
 
@@ -104,30 +117,29 @@ To use Autodiscovery with Network Device Monitoring:
 {{% tab "SNMPv2" %}}
 
 ```yaml
-listeners:
-  - name: snmp
-snmp_listener:
-  workers: 100  # number of workers used to discover devices concurrently
-  discovery_interval: 3600  # interval between each autodiscovery in seconds
-  loader: core  # use core check implementation of SNMP integration. recommended
-  use_device_id_as_hostname: true  # recommended
-  configs:
-    - network_address: 10.10.0.0/24  # CIDR subnet
-      loader: core
-      snmp_version: 2
-      port: 161
-      community_string: '***'  # enclose with single quote
-      tags:
-      - "key1:val1"
-      - "key2:val2"
-    - network_address: 10.20.0.0/24
-      loader: core
-      snmp_version: 2
-      port: 161
-      community_string: '***'
-      tags:
-      - "key1:val1"
-      - "key2:val2"
+network_devices:
+  autodiscovery:
+    workers: 100  # number of workers used to discover devices concurrently
+    discovery_interval: 3600  # interval between each autodiscovery in seconds
+    loader: core  # use core check implementation of SNMP integration. recommended
+    use_device_id_as_hostname: true  # recommended
+    configs:
+      - network_address: 10.10.0.0/24  # CIDR subnet
+        loader: core
+        snmp_version: 2
+        port: 161
+        community_string: '***'  # enclose with single quote
+        tags:
+        - "key1:val1"
+        - "key2:val2"
+      - network_address: 10.20.0.0/24
+        loader: core
+        snmp_version: 2
+        port: 161
+        community_string: '***'
+        tags:
+        - "key1:val1"
+        - "key2:val2"
 ```
 
 {{% /tab %}}
@@ -135,34 +147,33 @@ snmp_listener:
 {{% tab "SNMPv3" %}}
 
 ```yaml
-listeners:
-  - name: snmp
-snmp_listener:
-  workers: 100  # number of workers used to discover devices concurrently
-  discovery_interval: 3600  # interval between each autodiscovery in seconds
-  loader: core  # use core check implementation of SNMP integration. recommended
-  use_device_id_as_hostname: true  # recommended
-  configs:
-    - network_address: 10.10.0.0/24  # CIDR subnet
-      snmp_version: 3
-      user: 'user'
-      authProtocol: 'SHA256'  # choices: MD5, SHA, SHA224, SHA256, SHA384, SHA512
-      authKey: 'fakeKey'  # enclose with single quote
-      privProtocol: 'AES256'  # choices: DES, AES, AES192, AES192C, AES256, AES256C
-      privKey: 'fakePrivKey'  # enclose with single quote
-      tags:
-        - 'key1:val1'
-        - 'key2:val2'
-    - network_address: 10.20.0.0/24
-      snmp_version: 3
-      user: 'user'
-      authProtocol: 'SHA256'
-      authKey: 'fakeKey'
-      privProtocol: 'AES256'
-      privKey: 'fakePrivKey'
-      tags:
-        - 'key1:val1'
-        - 'key2:val2'
+network_devices:
+  autodiscovery:
+    workers: 100  # number of workers used to discover devices concurrently
+    discovery_interval: 3600  # interval between each autodiscovery in seconds
+    loader: core  # use core check implementation of SNMP integration. recommended
+    use_device_id_as_hostname: true  # recommended
+    configs:
+      - network_address: 10.10.0.0/24  # CIDR subnet
+        snmp_version: 3
+        user: 'user'
+        authProtocol: 'SHA256'  # choices: MD5, SHA, SHA224, SHA256, SHA384, SHA512
+        authKey: 'fakeKey'  # enclose with single quote
+        privProtocol: 'AES256'  # choices: DES, AES, AES192, AES192C, AES256, AES256C
+        privKey: 'fakePrivKey'  # enclose with single quote
+        tags:
+          - 'key1:val1'
+          - 'key2:val2'
+      - network_address: 10.20.0.0/24
+        snmp_version: 3
+        user: 'user'
+        authProtocol: 'SHA256'
+        authKey: 'fakeKey'
+        privProtocol: 'AES256'
+        privKey: 'fakePrivKey'
+        tags:
+          - 'key1:val1'
+          - 'key2:val2'
 ```
 
 {{% /tab %}}
@@ -170,21 +181,24 @@ snmp_listener:
 
 **Note**: The Datadog Agent automatically configures the SNMP check with each of the IPs that are discovered. A discovered device is an IP that responds successfully when being polled using SNMP.
 
+**Note**: Make sure you are on Agent 7.54+ for this syntax. For previous versions, see the [previous config_template.yaml][9]
+
 ## Validation
 
-[Run the Agent's status subcommand][9] and look for `snmp` under the Checks section.
+[Run the Agent's status subcommand][10] and look for `snmp` under the Checks section.
 
 ## Further Reading
 
 {{< partial name="whats-next/whats-next.html" >}}
 
 
-[1]: https://app.datadoghq.com/account/settings#agent
+[1]: https://app.datadoghq.com/account/settings/agent/latest
 [2]: /network_monitoring/devices/profiles#sysoid-mapped-devices
-[3]: /agent/guide/agent-configuration-files/#agent-configuration-directory
+[3]: /agent/configuration/agent-configuration-files/#agent-configuration-directory
 [4]: https://github.com/DataDog/integrations-core/blob/master/snmp/datadog_checks/snmp/data/conf.yaml.example
-[5]: /agent/guide/agent-commands/?tab=agentv6v7#start-stop-and-restart-the-agent
-[6]: https://github.com/DataDog/integrations-core/tree/master/snmp/datadog_checks/snmp/data/profiles
+[5]: /agent/configuration/agent-commands/?tab=agentv6v7#start-stop-and-restart-the-agent
+[6]: https://docs.datadoghq.com/network_monitoring/devices/supported_devices
 [7]: /agent
-[8]: /agent/guide/agent-configuration-files/?tab=agentv6v7#agent-main-configuration-file
-[9]: /agent/guide/agent-commands/#agent-status-and-information
+[8]: /agent/configuration/agent-configuration-files/?tab=agentv6v7#agent-main-configuration-file
+[9]: https://github.com/DataDog/datadog-agent/blob/51dd4482466cc052d301666628b7c8f97a07662b/pkg/config/config_template.yaml#L855
+[10]: /agent/configuration/agent-commands/#agent-status-and-information

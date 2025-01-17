@@ -1,4 +1,6 @@
 ---
+algolia:
+  subcategory: Marketplace インテグレーション
 app_id: superwise-license
 app_uuid: f15082a6-d0ed-4f6f-a315-f7cbcaae6823
 assets: {}
@@ -11,7 +13,9 @@ author:
 categories:
 - インシデント
 - マーケットプレイス
-- notification
+- notifications
+- ai/ml
+custom_kind: インテグレーション
 dependencies: []
 display_on_public_website: true
 draft: false
@@ -20,12 +24,10 @@ integration_id: superwise-license
 integration_title: Superwise モデル観測性
 integration_version: ''
 is_public: true
-kind: integration
 legal_terms:
   eula: assets/eula.pdf
 manifest_version: 2.0.0
 name: superwise_license
-oauth: {}
 pricing:
 - billing_type: tag_count
   includes_assets: true
@@ -46,7 +48,8 @@ tile:
   classifier_tags:
   - Category::Incidents
   - Category::Marketplace
-  - Category::Notification
+  - Category::Notifications
+  - Category::AI/ML
   - Offering::Software License
   - Supported OS::Linux
   - Supported OS::Windows
@@ -67,11 +70,17 @@ tile:
     image_url: images/4_4.png
     media_type: image
   overview: README.md#Overview
+  resources:
+  - resource_type: blog
+    url: https://www.datadoghq.com/blog/superwise-datadog-marketplace/
+  - resource_type: documentation
+    url: https://docs.superwise.ai
   support: README.md#Support
   title: Superwise モデル観測性
   uninstallation: README.md#Uninstallation
 ---
 
+<!--  SOURCED FROM https://github.com/DataDog/marketplace -->
 
 
 ## 概要
@@ -101,4 +110,4 @@ Superwise のインテグレーションにより、Datadog ユーザーは既�
 [4]: https://www.datadoghq.com/blog/superwise-datadog-marketplace/
 [5]: https://docs.superwise.ai
 ---
-このアプリケーションは Marketplace から入手でき、Datadog テクノロジーパートナーによってサポートされています。このアプリケーションを購入するには、<a href="https://app.datadoghq.com/marketplace/app/superwise-license" target="_blank">こちらをクリック</a>してください。
+このアプリケーションは Marketplace から入手でき、Datadog テクノロジーパートナーによってサポートされています。利用するには、<a href="https://app.datadoghq.com/marketplace/app/superwise-license" target="_blank">Marketplace でこのアプリケーションを購入してください</a>。
